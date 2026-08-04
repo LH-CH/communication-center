@@ -1,36 +1,26 @@
-# Dashboard
+# Static Display with GitHub Admin
 
-A minimal single-screen dashboard hosted with GitHub Pages.
+Files:
 
-## Features
-- Responsive 24-hour clock and date
-- YouTube video feed
-- Current National Weather Service conditions
-- Wind, humidity, sunrise, and sunset
-- Scheduled rotating notices
-- Active weather alerts
-- Automatic configuration checks and local fallback caching
+- `index.html` — public display
+- `config.json` — display settings and notices
+- `admin.html` — browser-based editor that writes `config.json` through the GitHub Contents API
 
-## Files
-- `index.html` — display interface and application logic
-- `config.json` — location, video, refresh intervals, and notices
+## Admin URL
 
-Weather icons are embedded as lightweight inline SVG graphics. No external icon package is required.
+After uploading, open:
 
-## Updating the display
-Edit `config.json` in GitHub and commit the change. The open display checks for updates automatically.
+`https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/admin.html`
 
+## One-time token setup
 
-The current-conditions area uses a compact weather summary and aligned 2×2 metrics grid with embedded minimal SVG icons.
+Create a fine-grained GitHub personal access token limited to this repository with:
 
+- Repository permission: **Contents — Read and write**
+- A reasonable expiration date
 
-## Automatic refresh
+Paste the token into the admin page. The token is kept in `sessionStorage`, which means it remains only in the current browser tab/session and is not written into the repository.
 
-The display automatically:
+## Security
 
-- Checks `config.json` using `configRefreshSeconds`
-- Refreshes current weather using `weatherRefreshMinutes`
-- Refreshes alerts using `alertsRefreshMinutes`
-- Reloads the entire page using `pageRefreshMinutes`
-
-Default values are already included in `config.json`. A timestamp is added to configuration requests to prevent browser caching.
+The admin HTML is publicly viewable on GitHub Pages, but it cannot save without a valid GitHub token. Never embed a token in `admin.html`, `config.json`, or any committed file.

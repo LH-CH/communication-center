@@ -25,12 +25,16 @@
     *{box-sizing:border-box}
     html,body{width:100%;height:100%;margin:0;overflow:hidden}
     body{
+      --sky-top:#020916;
+      --sky-bottom:#020b18;
+      --sky-glow:rgba(101,199,247,.035);
       font-family:Segoe UI,Arial,sans-serif;
       color:var(--text);
       background:
-        radial-gradient(circle at 15% 10%,rgba(101,199,247,.035),transparent 30%),
-        linear-gradient(180deg,#020916 0%,#020b18 100%);
+        radial-gradient(circle at 15% 10%,var(--sky-glow),transparent 30%),
+        linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 100%);
       font-variant-numeric:tabular-nums;
+      transition:background 60s linear;
     }
 
     .app{
@@ -341,6 +345,7 @@ let alertsBusy=false;
 let hourlyUrl='';
 let stationsUrl='';
 let stationId='';
+let lastBackgroundMinute=-1;
 
 const $=id=>document.getElementById(id);
 const cacheKey='display-weather-v1';
@@ -470,6 +475,7 @@ async function loadConfig(initial=false){
     CONFIG=JSON.parse(text);
     setVideo();
     startNoticeRotation();
+    updateDynamicBackground(true);
     if(!initial)scheduleRefreshTimers();
     if(initial||!hourlyUrl)await refreshWeather(true);
   }catch(e){
@@ -563,6 +569,7 @@ async function refreshWeather(force=false){
 
     localStorage.setItem(cacheKey,JSON.stringify(w));
     renderWeather(w,false);
+    updateDynamicBackground(true);
   }catch(e){
     console.error('Weather',e);
     const c=localStorage.getItem(cacheKey);
@@ -634,13 +641,123 @@ function scheduleRefreshTimers(){
   },pageMinutes*60*1000);
 }
 
+function hexToRgb(hex){
+  const value=hex.replace('#','');
+  return {
+    r:parseInt(value.slice(0,2),16),
+    g:parseInt(value.slice(2,4),16),
+    b:parseInt(value.slice(4,6),16)
+  };
+}
+
+function mixColor(a,b,t){
+  const A=hexToRgb(a),B=hexToRgb(b);
+  const c=k=>Math.round(A[k]+(B[k]-A[k])*Math.max(0,Math.min(1,t)));
+  return `rgb(${c('r')},${c('g')},${c('b')})`;
+}
+
+function localDateParts(date,tz){
+  const parts=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit',
+    hourCycle:'h23'
+  }).formatToParts(date);
+  const get=t=>Number(parts.find(p=>p.type===t)?.value||0);
+  return {
+    year:get('year'),
+    month:get('month'),
+    day:get('day'),
+    hour:get('hour'),
+    minute:get('minute'),
+    second:get('second')
+  };
+}
+
+function localMinutes(date,tz){
+  const p=localDateParts(date,tz);
+  return p.hour*60+p.minute+p.second/60;
+}
+
+function updateDynamicBackground(force=false){
+  if(CONFIG.dynamicBackground===false){
+    document.body.style.setProperty('--sky-top','#020916');
+    document.body.style.setProperty('--sky-bottom','#020b18');
+    document.body.style.setProperty('--sky-glow','rgba(101,199,247,.035)');
+    return;
+  }
+
+  const lat=CONFIG.location?.latitude;
+  const lon=CONFIG.location?.longitude;
+  const tz=CONFIG.timeZone||'America/Denver';
+
+  if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+
+  const now=new Date();
+  const minuteKey=Math.floor(now.getTime()/60000);
+  if(!force&&minuteKey===lastBackgroundMinute)return;
+  lastBackgroundMinute=minuteKey;
+
+  const rise=solar(now,lat,lon,true);
+  const set=solar(now,lat,lon,false);
+  if(!rise||!set)return;
+
+  const nowMin=localMinutes(now,tz);
+  const riseMin=localMinutes(rise,tz);
+  const setMin=localMinutes(set,tz);
+  const transition=Math.max(30,Number(CONFIG.backgroundTransitionMinutes)||75);
+
+  const palettes={
+    night:{top:'#010611',bottom:'#020a17',glow:'#0b1c36'},
+    dawn:{top:'#14233a',bottom:'#3b2d45',glow:'#8b5d64'},
+    day:{top:'#07192b',bottom:'#0c2740',glow:'#2c6b89'},
+    dusk:{top:'#171f35',bottom:'#3a2339',glow:'#8d4f5d'}
+  };
+
+  let from,to,t;
+
+  if(nowMin<riseMin-transition){
+    from=to=palettes.night;t=0;
+  }else if(nowMin<riseMin){
+    from=palettes.night;to=palettes.dawn;
+    t=(nowMin-(riseMin-transition))/transition;
+  }else if(nowMin<riseMin+transition){
+    from=palettes.dawn;to=palettes.day;
+    t=(nowMin-riseMin)/transition;
+  }else if(nowMin<setMin-transition){
+    from=to=palettes.day;t=0;
+  }else if(nowMin<setMin){
+    from=palettes.day;to=palettes.dusk;
+    t=(nowMin-(setMin-transition))/transition;
+  }else if(nowMin<setMin+transition){
+    from=palettes.dusk;to=palettes.night;
+    t=(nowMin-setMin)/transition;
+  }else{
+    from=to=palettes.night;t=0;
+  }
+
+  document.body.style.setProperty('--sky-top',mixColor(from.top,to.top,t));
+  document.body.style.setProperty('--sky-bottom',mixColor(from.bottom,to.bottom,t));
+
+  const glow=mixColor(from.glow,to.glow,t);
+  document.body.style.setProperty('--sky-glow',glow.replace('rgb(','rgba(').replace(')',',.16)'));
+}
+
 function init(){
   const wc=localStorage.getItem(cacheKey),ac=localStorage.getItem(alertCacheKey);
   if(wc)renderWeather(JSON.parse(wc),true);
   if(ac)renderAlerts(JSON.parse(ac),true);
 
   updateClock();
-  setInterval(updateClock,1000);
+  updateDynamicBackground(true);
+  setInterval(()=>{
+    updateClock();
+    updateDynamicBackground(false);
+  },1000);
 
   loadConfig(true).then(()=>{
     refreshAlerts();

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Display Admin</title>
+<style>
+:root{
+  --bg:#020916;--panel:#071322;--panel2:#0a1829;--line:#23364a;
+  --text:#f2f6fa;--muted:#9eb0c3;--accent:#55b7e8;--danger:#ef6b73;
+  --ok:#51d18d;--radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.shell{max-width:1280px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+h1{font-size:24px;margin:0;font-weight:650}
+.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.actions{display:flex;gap:10px;align-items:center}
+button{border:1px solid var(--line);background:#0b1a2b;color:var(--text);border-radius:8px;padding:10px 15px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#00111d;font-weight:650}
+button.danger{color:#ff9ba2}
+button:disabled{opacity:.5;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(520px,1.65fr);gap:24px}
+.panel{background:rgba(7,19,34,.72);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.panel h2{font-size:17px;margin:0 0 17px}
+.field{margin-bottom:14px}
+label{display:block;color:var(--muted);font-size:12px;font-weight:600;margin-bottom:6px}
+input,textarea,select{
+  width:100%;border:1px solid var(--line);border-radius:8px;background:#06111f;
+  color:var(--text);padding:10px 11px;outline:none
+}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{min-height:84px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toggle{display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(35,54,74,.55);padding:12px 0}
+.toggle:first-of-type{border-top:0}
+.switch{position:relative;width:42px;height:24px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;border-radius:999px;background:#24364a;transition:.18s}
+.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#b9c7d4;border-radius:50%;transition:.18s}
+.switch input:checked+.slider{background:var(--accent)}
+.switch input:checked+.slider:before{transform:translateX(18px);background:#04111c}
+.repo-box{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.token-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.help{color:var(--muted);font-size:12px;line-height:1.45}
+.status{font-size:13px;color:var(--muted)}
+.status.ok{color:var(--ok)}
+.status.err{color:#ff9ba2}
+.notice-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.notice-list{display:flex;flex-direction:column;gap:12px}
+.notice-card{border:1px solid var(--line);border-radius:9px;background:#06111f;padding:14px}
+.notice-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.notice-number{font-weight:650}
+.notice-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.small{padding:7px 10px;font-size:12px}
+.footerbar{position:sticky;bottom:0;margin-top:22px;padding:14px 0;background:linear-gradient(transparent,var(--bg) 25%);display:flex;justify-content:flex-end;gap:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal.open{display:flex}
+.modal-card{max-width:680px;background:#071322;border:1px solid var(--line);border-radius:12px;padding:22px}
+.modal-card h2{margin-top:0}
+code{background:#0b1a2b;border:1px solid var(--line);border-radius:5px;padding:2px 5px}
+ol{color:#cbd7e2;line-height:1.55}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.notice-grid{grid-template-columns:1fr}.repo-box,.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+  <div>
+    <h1>Display Admin</h1>
+    <div class="sub">Edit configuration and publish directly to GitHub.</div>
+  </div>
+  <div class="actions">
+    <span id="connectionStatus" class="status">Not connected</span>
+    <button id="setupBtn">Setup</button>
+    <button id="loadBtn">Load</button>
+  </div>
+</header>
+
+<div class="grid">
+  <section class="panel">
+    <h2>Repository access</h2>
+    <div class="repo-box">
+      <div class="field"><label>GitHub owner</label><input id="owner" value="LH-CH"></div>
+      <div class="field"><label>Repository</label><input id="repo" value="communication-center"></div>
+      <div class="field"><label>Branch</label><input id="branch" value="main"></div>
+      <div class="field"><label>Config path</label><input id="path" value="config.json"></div>
+    </div>
+    <div class="field">
+      <label>Fine-grained access token</label>
+      <div class="token-row">
+        <input id="token" type="password" autocomplete="off" placeholder="github_pat_...">
+        <button id="forgetBtn">Forget</button>
+      </div>
+      <div class="help">The token stays in this browser tab only. It is never written into the website files.</div>
+    </div>
+
+    <h2 style="margin-top:26px">Display settings</h2>
+    <div class="field"><label>Display location</label><input id="locationLabel"></div>
+    <div class="row">
+      <div class="field"><label>Latitude</label><input id="latitude" type="number" step="any"></div>
+      <div class="field"><label>Longitude</label><input id="longitude" type="number" step="any"></div>
+    </div>
+    <div class="field"><label>Time zone</label><input id="timeZone" placeholder="America/Denver"></div>
+    <div class="field"><label>YouTube video URL</label><input id="youtubeUrl"></div>
+
+    <div class="toggle"><span>Show video</span><label class="switch"><input id="showVideo" type="checkbox"><span class="slider"></span></label></div>
+    <div class="toggle"><span>Dynamic background</span><label class="switch"><input id="dynamicBackground" type="checkbox"><span class="slider"></span></label></div>
+
+    <div class="row" style="margin-top:14px">
+      <div class="field"><label>Background transition (minutes)</label><input id="backgroundTransitionMinutes" type="number" min="30"></div>
+      <div class="field"><label>Notice rotation (seconds)</label><input id="noticeRotationSeconds" type="number" min="5"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Config check (seconds)</label><input id="configRefreshSeconds" type="number" min="10"></div>
+      <div class="field"><label>Page refresh (minutes)</label><input id="pageRefreshMinutes" type="number" min="5"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="notice-toolbar">
+      <h2 style="margin:0">Notice Manager</h2>
+      <button id="addNoticeBtn" class="primary">+ New notice</button>
+    </div>
+    <div class="help" style="margin-bottom:14px">Notices appear only during their scheduled window. Leave both dates blank to display a notice immediately until it is removed.</div>
+    <div id="noticeList" class="notice-list"></div>
+  </section>
+</div>
+
+<div class="footerbar">
+  <button id="previewBtn">Preview JSON</button>
+  <button id="saveBtn" class="primary">Save to GitHub</button>
+</div>
+</div>
+
+<div id="setupModal" class="modal">
+  <div class="modal-card">
+    <h2>One-time GitHub setup</h2>
+    <ol>
+      <li>Open GitHub → profile picture → <b>Settings</b>.</li>
+      <li>Open <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b>.</li>
+      <li>Create a token limited to the <code>communication-center</code> repository.</li>
+      <li>Under repository permissions, set <b>Contents</b> to <b>Read and write</b>.</li>
+      <li>Choose an expiration date and create the token.</li>
+      <li>Paste it into the token field on this page, then click <b>Load</b>.</li>
+    </ol>
+    <p class="help">Anyone can open this admin page, but only someone holding a valid repository token can read or save private repository content. For a public repository, reading is public but writing still requires the token.</p>
+    <div style="text-align:right"><button id="closeModal" class="primary">Done</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const $=id=>document.getElementById(id);
+let currentSha='';
+let currentConfig={};
+let notices=[];
+
+const enc=s=>btoa(unescape(encodeURIComponent(s)));
+const dec=s=>decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
+
+function apiUrl(){
+  const owner=$('owner').value.trim();
+  const repo=$('repo').value.trim();
+  const path=$('path').value.trim();
+  const branch=$('branch').value.trim();
+  return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(branch)}`;
+}
+
+function headers(){
+  const token=$('token').value.trim();
+  const h={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  if(token)h.Authorization=`Bearer ${token}`;
+  return h;
+}
+
+function setStatus(text,type=''){
+  $('connectionStatus').textContent=text;
+  $('connectionStatus').className=`status ${type}`;
+}
+
+function toLocalInput(value){
+  if(!value)return'';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return'';
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function fromLocalInput(value){
+  return value?new Date(value).toISOString():'';
+}
+
+function renderNotices(){
+  const root=$('noticeList');
+  root.innerHTML='';
+  if(!notices.length){
+    root.innerHTML='<div class="help">No notices configured.</div>';
+    return;
+  }
+
+  notices.forEach((n,i)=>{
+    const card=document.createElement('div');
+    card.className='notice-card';
+    card.innerHTML=`
+      <div class="notice-head">
+        <span class="notice-number">Notice ${i+1}</span>
+        <button class="danger small" data-remove="${i}">Remove</button>
+      </div>
+      <div class="notice-grid">
+        <div class="field full">
+          <label>Message</label>
+          <textarea data-field="message" data-index="${i}"></textarea>
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select data-field="priority" data-index="${i}">
+            <option value="normal">Normal</option>
+            <option value="important">Important</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Start</label>
+          <input type="datetime-local" data-field="start" data-index="${i}">
+        </div>
+        <div class="field">
+          <label>Expiration</label>
+          <input type="datetime-local" data-field="expires" data-index="${i}">
+        </div>
+      </div>`;
+    root.appendChild(card);
+
+    card.querySelector('[data-field="message"]').value=n.message||'';
+    card.querySelector('[data-field="priority"]').value=n.priority||'normal';
+    card.querySelector('[data-field="start"]').value=toLocalInput(n.start);
+    card.querySelector('[data-field="expires"]').value=toLocalInput(n.expires);
+  });
+}
+
+function syncNoticeInputs(){
+  document.querySelectorAll('[data-field]').forEach(el=>{
+    const i=Number(el.dataset.index),field=el.dataset.field;
+    if(!notices[i])return;
+    notices[i][field]=(field==='start'||field==='expires')?fromLocalInput(el.value):el.value;
+  });
+}
+
+function fillForm(c){
+  currentConfig=c;
+  notices=Array.isArray(c.notices)?structuredClone(c.notices):[];
+  $('locationLabel').value=c.location?.label||'';
+  $('latitude').value=c.location?.latitude??'';
+  $('longitude').value=c.location?.longitude??'';
+  $('timeZone').value=c.timeZone||'';
+  $('youtubeUrl').value=c.youtubeUrl||'';
+  $('showVideo').checked=c.showVideo!==false;
+  $('dynamicBackground').checked=c.dynamicBackground!==false;
+  $('backgroundTransitionMinutes').value=c.backgroundTransitionMinutes??75;
+  $('noticeRotationSeconds').value=c.noticeRotationSeconds??10;
+  $('configRefreshSeconds').value=c.configRefreshSeconds??30;
+  $('pageRefreshMinutes').value=c.pageRefreshMinutes??60;
+  renderNotices();
+}
+
+function buildConfig(){
+  syncNoticeInputs();
+  return {
+    ...currentConfig,
+    timeZone:$('timeZone').value.trim(),
+    location:{
+      label:$('locationLabel').value.trim(),
+      latitude:Number($('latitude').value),
+      longitude:Number($('longitude').value)
+    },
+    youtubeUrl:$('youtubeUrl').value.trim(),
+    showVideo:$('showVideo').checked,
+    dynamicBackground:$('dynamicBackground').checked,
+    backgroundTransitionMinutes:Number($('backgroundTransitionMinutes').value)||75,
+    noticeRotationSeconds:Number($('noticeRotationSeconds').value)||10,
+    configRefreshSeconds:Number($('configRefreshSeconds').value)||30,
+    pageRefreshMinutes:Number($('pageRefreshMinutes').value)||60,
+    notices:notices.filter(n=>n.message?.trim())
+  };
+}
+
+async function loadConfig(){
+  const token=$('token').value.trim();
+  if(token)sessionStorage.setItem('displayAdminToken',token);
+  setStatus('Loading…');
+  try{
+    const r=await fetch(apiUrl(),{headers:headers(),cache:'no-store'});
+    if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
+    const data=await r.json();
+    currentSha=data.sha;
+    fillForm(JSON.parse(dec(data.content)));
+    setStatus('Connected','ok');
+  }catch(e){
+    console.error(e);
+    setStatus('Load failed','err');
+    alert(`Unable to load config.json.\n\n${e.message}`);
+  }
+}
+
+async function saveConfig(){
+  if(!currentSha){
+    alert('Load the current configuration before saving.');
+    return;
+  }
+  const token=$('token').value.trim();
+  if(!token){
+    alert('A GitHub token is required to save.');
+    return;
+  }
+
+  const config=buildConfig();
+  const owner=$('owner').value.trim();
+  const repo=$('repo').value.trim();
+  const path=$('path').value.trim();
+  const branch=$('branch').value.trim();
+  const url=`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+
+  setStatus('Saving…');
+  $('saveBtn').disabled=true;
+  try{
+    const r=await fetch(url,{
+      method:'PUT',
+      headers:{...headers(),'Content-Type':'application/json'},
+      body:JSON.stringify({
+        message:'Update display configuration',
+        content:enc(JSON.stringify(config,null,2)+'\n'),
+        sha:currentSha,
+        branch
+      })
+    });
+    if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
+    const data=await r.json();
+    currentSha=data.content.sha;
+    currentConfig=config;
+    setStatus('Saved','ok');
+    alert('Saved to GitHub. GitHub Pages typically publishes the change within one to two minutes.');
+  }catch(e){
+    console.error(e);
+    setStatus('Save failed','err');
+    alert(`Unable to save.\n\n${e.message}`);
+  }finally{
+    $('saveBtn').disabled=false;
+  }
+}
+
+$('addNoticeBtn').addEventListener('click',()=>{
+  syncNoticeInputs();
+  notices.push({message:'',priority:'normal',start:'',expires:''});
+  renderNotices();
+  setTimeout(()=>document.querySelectorAll('textarea')[document.querySelectorAll('textarea').length-1]?.focus(),0);
+});
+
+$('noticeList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-remove]');
+  if(!b)return;
+  syncNoticeInputs();
+  notices.splice(Number(b.dataset.remove),1);
+  renderNotices();
+});
+
+$('loadBtn').addEventListener('click',loadConfig);
+$('saveBtn').addEventListener('click',saveConfig);
+$('previewBtn').addEventListener('click',()=>alert(JSON.stringify(buildConfig(),null,2)));
+$('forgetBtn').addEventListener('click',()=>{sessionStorage.removeItem('displayAdminToken');$('token').value='';setStatus('Token cleared')});
+$('setupBtn').addEventListener('click',()=>$('setupModal').classList.add('open'));
+$('closeModal').addEventListener('click',()=>$('setupModal').classList.remove('open'));
+$('setupModal').addEventListener('click',e=>{if(e.target===$('setupModal'))$('setupModal').classList.remove('open')});
+
+$('token').value=sessionStorage.getItem('displayAdminToken')||'';
+if(!$('token').value)$('setupModal').classList.add('open');
+</script>
+</body>
+</html>

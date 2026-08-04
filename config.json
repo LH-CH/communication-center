@@ -19,5 +19,7 @@
       "expires": "",
       "priority": "normal"
     }
-  ]
+  ],
+  "dynamicBackground": true,
+  "backgroundTransitionMinutes": 75
 }
