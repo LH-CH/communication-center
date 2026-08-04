@@ -25,7 +25,7 @@ button.danger{color:#ff9ba2}
 button:disabled{opacity:.5;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(520px,1.65fr);gap:24px}
 .panel{background:rgba(7,19,34,.72);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
-.panel h2{font-size:17px;margin:0 0 17px}
+.panel h2{font-size:17px;margin:0 0 14px}
 .section-head{
   display:flex;
   align-items:center;
@@ -60,7 +60,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
   pointer-events:none;
 }
 
-.field{margin-bottom:14px}
+.field{margin-bottom:16px}
 .location-search{position:relative}
 .location-results{
   position:absolute;
@@ -95,16 +95,17 @@ button:disabled{opacity:.5;cursor:not-allowed}
   display:none;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  padding:10px 12px;
+  gap:16px;
+  padding:13px 14px;
+  margin-bottom:18px;
   border:1px solid var(--line);
   border-radius:8px;
   background:#06111f;
 }
 .location-selected.visible{display:flex}
 .location-selected .meta{min-width:0}
-.location-selected strong{display:block}
-.location-selected span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.location-selected strong{display:block;font-size:15px;line-height:1.25}
+.location-selected span{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.3}
 .location-message{min-height:18px;color:var(--muted);font-size:12px;margin-top:5px}
 .manual-location{
   display:none;
@@ -122,6 +123,19 @@ button:disabled{opacity:.5;cursor:not-allowed}
   gap:8px;
   margin-top:8px;
 }
+.youtube-field{
+  margin-top:2px;
+}
+.youtube-field input{
+  min-height:42px;
+}
+.youtube-field .help{
+  margin-top:6px;
+}
+.display-settings-block{
+  padding-top:2px;
+}
+
 
 
 label{display:block;color:var(--muted);font-size:12px;font-weight:600;margin-bottom:6px}
@@ -148,6 +162,18 @@ textarea{min-height:84px;resize:vertical}
 .status.err{color:#ff9ba2}
 .notice-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .notice-list{display:flex;flex-direction:column;gap:12px}
+.notice-manager-disabled{
+  display:flex;
+  min-height:240px;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:var(--muted);
+  border:1px dashed var(--line);
+  border-radius:9px;
+  padding:24px;
+}
+
 .notice-card{border:1px solid var(--line);border-radius:9px;background:#06111f;padding:14px}
 .notice-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .notice-number{font-weight:650}
@@ -174,7 +200,6 @@ ol{color:#cbd7e2;line-height:1.55}
   <div class="actions">
     <span id="connectionStatus" class="status">Not connected</span>
     <button id="setupBtn">Setup</button>
-    <button id="restoreBtn">Restore notices</button>
     <button id="loadBtn">Load</button>
   </div>
 </header>
@@ -202,7 +227,8 @@ ol{color:#cbd7e2;line-height:1.55}
     </div>
     </div>
 
-    <h2 style="margin-top:26px">Display settings</h2>
+    <h2 style="margin-top:24px;margin-bottom:16px">Display settings</h2>
+    <div class="display-settings-block">
     <div class="field location-search">
       <label>Display location</label>
       <input id="locationSearch" autocomplete="off" placeholder="Start typing a city or ZIP code">
@@ -259,9 +285,14 @@ ol{color:#cbd7e2;line-height:1.55}
     <input id="latitude" type="hidden">
     <input id="longitude" type="hidden">
     <input id="timeZone" type="hidden">
-    <div class="field"><label>YouTube video URL</label><input id="youtubeUrl"></div>
+    <div class="field youtube-field">
+      <label>YouTube video URL</label>
+      <input id="youtubeUrl">
+      <div class="help">Paste a standard YouTube watch or share link.</div>
+    </div>
 
     <div class="toggle"><span>Show video</span><label class="switch"><input id="showVideo" type="checkbox"><span class="slider"></span></label></div>
+    <div class="toggle"><span>Enable notice manager</span><label class="switch"><input id="showNoticeManager" type="checkbox"><span class="slider"></span></label></div>
     <div class="toggle"><span>Dynamic background</span><label class="switch"><input id="dynamicBackground" type="checkbox"><span class="slider"></span></label></div>
 
     <div class="row" style="margin-top:14px">
@@ -272,14 +303,15 @@ ol{color:#cbd7e2;line-height:1.55}
       <div class="field"><label>Config check (seconds)</label><input id="configRefreshSeconds" type="number" min="10"></div>
       <div class="field"><label>Page refresh (minutes)</label><input id="pageRefreshMinutes" type="number" min="5"></div>
     </div>
+    </div>
   </section>
 
-  <section class="panel">
+  <section id="noticeManagerPanel" class="panel">
     <div class="notice-toolbar">
       <h2 style="margin:0">Notice Manager</h2>
       <button id="addNoticeBtn" class="primary">+ New notice</button>
     </div>
-    <div class="help" style="margin-bottom:14px">Notices are backed up in this browser while you edit. Loading an empty GitHub notice list will require confirmation, and the Restore notices button can recover the latest local backup.</div>
+    <div class="help" style="margin-bottom:14px">Notices are backed up in this browser while you edit. Loading an empty GitHub notice list will require confirmation, and the latest local backup remains available automatically.</div>
     <div id="noticeList" class="notice-list"></div>
   </section>
 </div>
@@ -353,6 +385,28 @@ function toLocalInput(value){
 
 function fromLocalInput(value){
   return value?new Date(value).toISOString():'';
+}
+
+function updateNoticeManagerVisibility(){
+  const enabled=$('showNoticeManager').checked;
+  const panel=$('noticeManagerPanel');
+
+  panel.querySelector('.notice-toolbar').style.display=enabled?'flex':'none';
+  panel.querySelector('.help').style.display=enabled?'block':'none';
+  $('noticeList').style.display=enabled?'flex':'none';
+
+  let disabled=panel.querySelector('.notice-manager-disabled');
+
+  if(!enabled){
+    if(!disabled){
+      disabled=document.createElement('div');
+      disabled.className='notice-manager-disabled';
+      disabled.textContent='Notice manager is turned off. Existing notices are preserved and can be re-enabled at any time.';
+      panel.appendChild(disabled);
+    }
+  }else if(disabled){
+    disabled.remove();
+  }
 }
 
 function renderNotices(){
@@ -656,6 +710,8 @@ function fillForm(c,{allowEmptyNotices=false}={}){
   }:null);
   $('youtubeUrl').value=c.youtubeUrl||'';
   $('showVideo').checked=c.showVideo!==false;
+  $('showNoticeManager').checked=c.showNoticeManager!==false;
+  updateNoticeManagerVisibility();
   $('dynamicBackground').checked=c.dynamicBackground!==false;
   $('backgroundTransitionMinutes').value=c.backgroundTransitionMinutes??75;
   $('noticeRotationSeconds').value=c.noticeRotationSeconds??10;
@@ -676,6 +732,7 @@ function buildConfig(){
     },
     youtubeUrl:$('youtubeUrl').value.trim(),
     showVideo:$('showVideo').checked,
+    showNoticeManager:$('showNoticeManager').checked,
     dynamicBackground:$('dynamicBackground').checked,
     backgroundTransitionMinutes:Number($('backgroundTransitionMinutes').value)||75,
     noticeRotationSeconds:Number($('noticeRotationSeconds').value)||10,
@@ -883,6 +940,10 @@ document.addEventListener('click',event=>{
   }
 });
 
+$('showNoticeManager').addEventListener('change',()=>{
+  updateNoticeManagerVisibility();
+});
+
 $('addNoticeBtn').addEventListener('click',()=>{
   syncNoticeInputs();
   notices.push({message:'',priority:'normal',start:'',expires:''});
@@ -912,21 +973,6 @@ $('noticeList').addEventListener('click',e=>{
   noticesDirty=true;
   saveNoticeBackup(notices);
   renderNotices();
-});
-
-$('restoreBtn').addEventListener('click',()=>{
-  const backup=getNoticeBackup();
-  if(!backup?.notices?.length){
-    alert('No local notice backup is available in this browser.');
-    return;
-  }
-
-  if(!confirm(`Restore ${backup.notices.length} notice(s) saved on ${new Date(backup.savedAt).toLocaleString()}?`))return;
-
-  notices=JSON.parse(JSON.stringify(backup.notices));
-  noticesDirty=true;
-  renderNotices();
-  setStatus('Notices restored','ok');
 });
 
 $('loadBtn').addEventListener('click',()=>{

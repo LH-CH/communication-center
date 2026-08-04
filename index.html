@@ -122,6 +122,15 @@
       min-height:0;
     }
 
+
+    footer.notice-disabled{
+      grid-template-columns:minmax(420px,1.2fr) minmax(380px,1fr);
+    }
+
+    footer.notice-disabled .notice-section{
+      display:none;
+    }
+
     .footer-section{min-width:0;min-height:0;display:flex;align-items:center}
 
     .current{
@@ -359,7 +368,7 @@
     </section>
   </main>
 
-  <footer>
+  <footer id="dashboardFooter">
     <section class="footer-section current">
       <div class="weather-summary">
         <div id="currentIcon" class="weather-icon" aria-label="Current weather"></div>
@@ -389,7 +398,7 @@
       </div>
     </section>
 
-    <section class="footer-section">
+    <section id="noticeSection" class="footer-section notice-section">
       <div id="notice" class="notice"><div id="noticeTrack" class="notice-track"></div><span id="noticeExpiration" class="notice-expiration"></span><span id="noticeCount" class="notice-count"></span></div>
     </section>
 
@@ -627,6 +636,7 @@ function advanceNotice(){
 
 function startNoticeRotation(){
   clearInterval(noticeTimer);
+  if(CONFIG.showNoticeManager===false)return;
   activeNoticeIndex=0;
   renderNoticeStack();
 
@@ -643,7 +653,17 @@ async function loadConfig(initial=false){
     currentConfigText=text;
     CONFIG=JSON.parse(text);
     setVideo();
-    startNoticeRotation();
+
+    const noticeEnabled=CONFIG.showNoticeManager!==false;
+    $('dashboardFooter').classList.toggle('notice-disabled',!noticeEnabled);
+
+    if(noticeEnabled){
+      startNoticeRotation();
+    }else{
+      clearInterval(noticeTimer);
+      $('noticeTrack').innerHTML='';
+      $('noticeCount').textContent='';
+    }
     updateDynamicBackground(true);
     if(!initial)scheduleRefreshTimers();
     if(initial||!hourlyUrl)await refreshWeather(true);

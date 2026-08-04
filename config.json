@@ -2,8 +2,8 @@
   "timeZone": "America/Denver",
   "location": {
     "label": "Kalispell, MT",
-    "latitude": 48.214,
-    "longitude": -114.324
+    "latitude": 48.197,
+    "longitude": -114.315
   },
   "youtubeUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
   "showVideo": true,
@@ -12,7 +12,15 @@
   "configRefreshSeconds": 30,
   "pageRefreshMinutes": 60,
   "noticeRotationSeconds": 10,
-  "notices": [],
+  "notices": [
+    {
+      "message": "",
+      "start": "",
+      "expires": "",
+      "priority": "normal"
+    }
+  ],
   "dynamicBackground": true,
-  "backgroundTransitionMinutes": 75
+  "backgroundTransitionMinutes": 75,
+  "showNoticeManager": true
 }

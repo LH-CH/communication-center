@@ -132,3 +132,31 @@ Enter:
 - Time zone
 
 The values are validated and then stored in the normal `config.json` location record. Latitude and longitude remain hidden after the location is selected.
+
+
+## Admin polish
+
+- Removed the Restore notices button
+- Improved spacing between the selected location and YouTube URL
+- Increased padding within the selected location card
+- Added a short YouTube URL helper line
+- Tightened the Display settings vertical rhythm
+
+
+## Notice manager toggle
+
+The admin page includes an **Enable notice manager** setting.
+
+When disabled:
+
+- The notice section is hidden on the public display
+- The footer automatically changes to a two-column layout
+- Existing notices remain stored in `config.json`
+- The notice editor is hidden in the admin page
+- Re-enabling the setting restores the existing notice queue
+
+Configuration key:
+
+```json
+"showNoticeManager": true
+```
