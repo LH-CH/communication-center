@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#020916;
@@ -28,7 +31,7 @@
       --sky-top:#020916;
       --sky-bottom:#020b18;
       --sky-glow:rgba(101,199,247,.035);
-      font-family:Segoe UI,Arial,sans-serif;
+      font-family:"Inter","Segoe UI",Arial,sans-serif;
       color:var(--text);
       background:
         radial-gradient(circle at 15% 10%,var(--sky-glow),transparent 30%),
@@ -84,9 +87,30 @@
     .clock-panel,.video-panel{min-width:0;min-height:0}
     .clock-panel{display:flex;align-items:center;justify-content:center}
     .clock-wrap{width:100%;padding-inline:clamp(6px,1.6vw,28px)}
-    .time-row{display:flex;align-items:flex-start;justify-content:center;white-space:nowrap;line-height:.84}
-    #time{font-size:clamp(104px,18.7vw,360px);font-weight:620;letter-spacing:-.065em}
-    #seconds{font-size:clamp(27px,3.7vw,72px);font-weight:500;color:var(--muted);margin:.08em 0 0 .22em}
+    .time-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      white-space:nowrap;
+      line-height:.84;
+      column-gap:0;
+      min-width:0;
+    }
+    #time{
+      font-size:clamp(104px,18.7vw,360px);
+      font-weight:620;
+      letter-spacing:.015em;
+      font-variant-numeric:tabular-nums;
+      font-feature-settings:"tnum" 1;
+    }
+    #seconds{
+      font-size:clamp(27px,3.7vw,72px);
+      font-weight:500;
+      color:var(--muted);
+      margin:.08em 0 0 .28em;
+      font-variant-numeric:tabular-nums;
+      font-feature-settings:"tnum" 1;
+    }
     #date{
       margin-top:clamp(22px,3vh,40px);
       font-size:clamp(19px,1.65vw,32px);
@@ -260,6 +284,7 @@
 
     @media(prefers-reduced-motion:reduce){
       *{animation:none!important;transition:none!important}
+      .notice-track{transition:none!important}
     }
   </style>
 </head>
@@ -317,7 +342,7 @@
     </section>
 
     <section class="footer-section">
-      <div id="notice" class="notice">No active department notices</div>
+      <div id="notice" class="notice"><div id="noticeTrack" class="notice-track"><div class="notice-slide">No active department notices</div></div><span id="noticeCount" class="notice-count"></span></div>
     </section>
 
     <section class="footer-section">
@@ -444,25 +469,47 @@ function escapeHtml(s){
   return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
-function renderNotice(){
-  const list=activeNotices(),el=$('notice');
+function renderNoticeList(){
+  const list=activeNotices();
+  const track=$('noticeTrack');
+  const count=$('noticeCount');
+
   if(!list.length){
-    el.className='notice';
-    el.textContent='No active department notices';
+    track.innerHTML='<div class="notice-slide">No active department notices</div>';
+    track.style.transform='translateY(0)';
+    count.textContent='';
+    activeNoticeIndex=0;
     return;
   }
-  activeNoticeIndex%=list.length;
-  const n=list[activeNoticeIndex];
-  el.className=`notice ${n.priority||'normal'}`;
-  el.innerHTML=`<span>${escapeHtml(n.message)}</span>${list.length>1?`<span class="notice-count">${activeNoticeIndex+1} of ${list.length}</span>`:''}`;
+
+  track.innerHTML=list.map(n=>
+    `<div class="notice-slide ${escapeHtml(n.priority||'normal')}"><span>${escapeHtml(n.message)}</span></div>`
+  ).join('');
+
+  activeNoticeIndex=Math.min(activeNoticeIndex,list.length-1);
+  track.style.transform=`translateY(-${activeNoticeIndex*100}%)`;
+  count.textContent=list.length>1?`${activeNoticeIndex+1} of ${list.length}`:'';
+}
+
+function advanceNotice(){
+  const list=activeNotices();
+  if(!list.length){
+    renderNoticeList();
+    return;
+  }
+
   activeNoticeIndex=(activeNoticeIndex+1)%list.length;
+  $('noticeTrack').style.transform=`translateY(-${activeNoticeIndex*100}%)`;
+  $('noticeCount').textContent=list.length>1?`${activeNoticeIndex+1} of ${list.length}`:'';
 }
 
 function startNoticeRotation(){
   clearInterval(noticeTimer);
   activeNoticeIndex=0;
-  renderNotice();
-  noticeTimer=setInterval(renderNotice,Math.max(5,CONFIG.noticeRotationSeconds||10)*1000);
+  renderNoticeList();
+
+  const seconds=Math.max(3,Number(CONFIG.noticeRotationSeconds)||10);
+  noticeTimer=setInterval(advanceNotice,seconds*1000);
 }
 
 async function loadConfig(initial=false){
