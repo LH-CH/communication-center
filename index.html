@@ -331,6 +331,10 @@
 let CONFIG={};
 let currentConfigText='';
 let noticeTimer=null;
+let configTimer=null;
+let weatherTimer=null;
+let alertsTimer=null;
+let pageRefreshTimer=null;
 let activeNoticeIndex=0;
 let weatherBusy=false;
 let alertsBusy=false;
@@ -466,6 +470,7 @@ async function loadConfig(initial=false){
     CONFIG=JSON.parse(text);
     setVideo();
     startNoticeRotation();
+    if(!initial)scheduleRefreshTimers();
     if(initial||!hourlyUrl)await refreshWeather(true);
   }catch(e){
     console.error('Config',e);
@@ -609,6 +614,26 @@ async function refreshAlerts(){
   }finally{alertsBusy=false}
 }
 
+function scheduleRefreshTimers(){
+  clearInterval(configTimer);
+  clearInterval(weatherTimer);
+  clearInterval(alertsTimer);
+  clearTimeout(pageRefreshTimer);
+
+  const configSeconds=Math.max(10,Number(CONFIG.configRefreshSeconds)||30);
+  const weatherMinutes=Math.max(1,Number(CONFIG.weatherRefreshMinutes)||10);
+  const alertsMinutes=Math.max(1,Number(CONFIG.alertsRefreshMinutes)||5);
+  const pageMinutes=Math.max(5,Number(CONFIG.pageRefreshMinutes)||60);
+
+  configTimer=setInterval(()=>loadConfig(false),configSeconds*1000);
+  weatherTimer=setInterval(()=>refreshWeather(false),weatherMinutes*60*1000);
+  alertsTimer=setInterval(refreshAlerts,alertsMinutes*60*1000);
+
+  pageRefreshTimer=setTimeout(()=>{
+    location.reload();
+  },pageMinutes*60*1000);
+}
+
 function init(){
   const wc=localStorage.getItem(cacheKey),ac=localStorage.getItem(alertCacheKey);
   if(wc)renderWeather(JSON.parse(wc),true);
@@ -616,11 +641,11 @@ function init(){
 
   updateClock();
   setInterval(updateClock,1000);
-  loadConfig(true).then(()=>refreshAlerts());
-  setInterval(()=>loadConfig(false),30000);
-  setInterval(()=>refreshWeather(false),600000);
-  setInterval(refreshAlerts,300000);
-  setInterval(()=>location.reload(),3600000);
+
+  loadConfig(true).then(()=>{
+    refreshAlerts();
+    scheduleRefreshTimers();
+  });
 }
 
 init();

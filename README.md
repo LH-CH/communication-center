@@ -22,3 +22,15 @@ Edit `config.json` in GitHub and commit the change. The open display checks for 
 
 
 The current-conditions area uses a compact weather summary and aligned 2×2 metrics grid with embedded minimal SVG icons.
+
+
+## Automatic refresh
+
+The display automatically:
+
+- Checks `config.json` using `configRefreshSeconds`
+- Refreshes current weather using `weatherRefreshMinutes`
+- Refreshes alerts using `alertsRefreshMinutes`
+- Reloads the entire page using `pageRefreshMinutes`
+
+Default values are already included in `config.json`. A timestamp is added to configuration requests to prevent browser caching.
