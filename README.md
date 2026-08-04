@@ -1,18 +1,21 @@
-# Communication Center TV Display
+# Dashboard
 
-A static, no-backend TV dashboard for GitHub Pages.
+A minimal single-screen dashboard hosted with GitHub Pages.
+
+## Features
+- Responsive 24-hour clock and date
+- YouTube video feed
+- Current National Weather Service conditions
+- Wind, humidity, sunrise, and sunset
+- Scheduled rotating notices
+- Active weather alerts
+- Automatic configuration checks and local fallback caching
 
 ## Files
-- `index.html` — complete dashboard
-- `config.json` — editable display settings, video, location, and notice queue
-- `background.png` — full-screen background
-- weather icon files — local fallback/condition assets
+- `index.html` — display interface and application logic
+- `config.json` — location, video, refresh intervals, and notices
 
-## Update the display
-Edit `config.json` in GitHub and commit the change. The TV checks for updates every 30 seconds. GitHub Pages publishing can take a minute or two.
+Weather icons are embedded as lightweight inline SVG graphics. No external icon package is required.
 
-## Notice scheduling
-Each notice supports `message`, `start`, `expires`, and `priority` (`normal`, `important`, or `urgent`). Blank dates mean immediate/no expiration. Dates should be ISO format, for example `2026-08-05T08:00:00-06:00`.
-
-## GitHub Pages
-Repository Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
+## Updating the display
+Edit `config.json` in GitHub and commit the change. The open display checks for updates automatically.
