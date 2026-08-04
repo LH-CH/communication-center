@@ -118,3 +118,17 @@ Location search now uses two sources:
 2. Open-Meteo geocoding for broader online search
 
 If the online service is unavailable, saved locations still work. Kalispell and several nearby Montana communities are included by default. Add additional locations to `locations.json` using the same fields.
+
+
+## Manual location fallback
+
+If online search is unavailable and the location is not in `locations.json`, press **Set manually**.
+
+Enter:
+
+- Location name
+- Latitude
+- Longitude
+- Time zone
+
+The values are validated and then stored in the normal `config.json` location record. Latitude and longitude remain hidden after the location is selected.

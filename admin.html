@@ -106,6 +106,23 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .location-selected strong{display:block}
 .location-selected span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 .location-message{min-height:18px;color:var(--muted);font-size:12px;margin-top:5px}
+.manual-location{
+  display:none;
+  margin-top:12px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#06111f;
+}
+.manual-location.open{display:block}
+.manual-location .row{margin-top:0}
+.location-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:8px;
+}
+
 
 label{display:block;color:var(--muted);font-size:12px;font-weight:600;margin-bottom:6px}
 input,textarea,select{
@@ -191,6 +208,43 @@ ol{color:#cbd7e2;line-height:1.55}
       <input id="locationSearch" autocomplete="off" placeholder="Start typing a city or ZIP code">
       <div id="locationResults" class="location-results"></div>
       <div id="locationMessage" class="location-message"></div>
+      <div class="location-actions">
+        <button id="manualLocationBtn" type="button" class="small">Set manually</button>
+      </div>
+
+      <div id="manualLocationPanel" class="manual-location">
+        <div class="field">
+          <label>Location name</label>
+          <input id="manualLocationLabel" placeholder="Kalispell, Montana">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Latitude</label>
+            <input id="manualLatitude" type="number" step="any" placeholder="48.1958">
+          </div>
+          <div class="field">
+            <label>Longitude</label>
+            <input id="manualLongitude" type="number" step="any" placeholder="-114.3129">
+          </div>
+        </div>
+        <div class="field">
+          <label>Time zone</label>
+          <select id="manualTimeZone">
+            <option value="America/Denver">Mountain Time — America/Denver</option>
+            <option value="America/Boise">Mountain Time — America/Boise</option>
+            <option value="America/Phoenix">Arizona — America/Phoenix</option>
+            <option value="America/Los_Angeles">Pacific Time — America/Los_Angeles</option>
+            <option value="America/Chicago">Central Time — America/Chicago</option>
+            <option value="America/New_York">Eastern Time — America/New_York</option>
+            <option value="America/Anchorage">Alaska — America/Anchorage</option>
+            <option value="Pacific/Honolulu">Hawaii — Pacific/Honolulu</option>
+          </select>
+        </div>
+        <div class="location-actions">
+          <button id="applyManualLocationBtn" type="button" class="primary small">Use this location</button>
+          <button id="cancelManualLocationBtn" type="button" class="small">Cancel</button>
+        </div>
+      </div>
     </div>
 
     <div id="locationSelected" class="location-selected">
@@ -567,7 +621,7 @@ async function searchLocations(query){
     }else{
       results.classList.remove('open');
       results.innerHTML='';
-      message.textContent='Online search is unavailable and no saved location matches were found.';
+      message.textContent='Online search is unavailable. Use Set manually below.';
     }
   }
 }
@@ -752,6 +806,56 @@ async function saveConfig(){
   }
 }
 
+$('manualLocationBtn').addEventListener('click',()=>{
+  const panel=$('manualLocationPanel');
+  panel.classList.add('open');
+  $('locationResults').classList.remove('open');
+
+  if(selectedLocation){
+    $('manualLocationLabel').value=selectedLocation.label||'';
+    $('manualLatitude').value=selectedLocation.latitude??'';
+    $('manualLongitude').value=selectedLocation.longitude??'';
+    $('manualTimeZone').value=selectedLocation.timeZone||'America/Denver';
+  }else{
+    $('manualLocationLabel').value=$('locationSearch').value.trim();
+  }
+
+  $('manualLocationLabel').focus();
+});
+
+$('cancelManualLocationBtn').addEventListener('click',()=>{
+  $('manualLocationPanel').classList.remove('open');
+});
+
+$('applyManualLocationBtn').addEventListener('click',()=>{
+  const label=$('manualLocationLabel').value.trim();
+  const latitude=Number($('manualLatitude').value);
+  const longitude=Number($('manualLongitude').value);
+  const timeZone=$('manualTimeZone').value;
+
+  if(!label){
+    alert('Enter a location name.');
+    $('manualLocationLabel').focus();
+    return;
+  }
+
+  if(!Number.isFinite(latitude)||latitude<-90||latitude>90){
+    alert('Enter a valid latitude between -90 and 90.');
+    $('manualLatitude').focus();
+    return;
+  }
+
+  if(!Number.isFinite(longitude)||longitude<-180||longitude>180){
+    alert('Enter a valid longitude between -180 and 180.');
+    $('manualLongitude').focus();
+    return;
+  }
+
+  setSelectedLocation({label,latitude,longitude,timeZone});
+  $('manualLocationPanel').classList.remove('open');
+  $('locationMessage').textContent='Manual location selected.';
+});
+
 $('locationSearch').addEventListener('input',()=>{
   clearTimeout(locationSearchTimer);
   const query=$('locationSearch').value;
@@ -769,7 +873,8 @@ $('changeLocationBtn').addEventListener('click',()=>{
   setSelectedLocation(null);
   $('locationSearch').value=prior;
   $('locationSearch').focus();
-  $('locationMessage').textContent='Search and select a new location.';
+  $('manualLocationPanel').classList.remove('open');
+  $('locationMessage').textContent='Search for a location or use Set manually.';
 });
 
 document.addEventListener('click',event=>{
