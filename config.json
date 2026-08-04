@@ -1,0 +1,26 @@
+{
+  "facilityName": "COMMUNICATION CENTER",
+  "timeZone": "America/Denver",
+  "location": {
+    "label": "Kalispell, MT",
+    "latitude": 48.197,
+    "longitude": -114.315
+  },
+  "youtubeUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
+  "showVideo": true,
+  "backgroundImage": "background.png",
+  "weatherRefreshMinutes": 10,
+  "alertsRefreshMinutes": 5,
+  "configRefreshSeconds": 30,
+  "pageRefreshMinutes": 60,
+  "forecastHours": 6,
+  "noticeRotationSeconds": 10,
+  "notices": [
+    {
+      "message": "",
+      "start": "",
+      "expires": "",
+      "priority": "normal"
+    }
+  ]
+}

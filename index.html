@@ -1,627 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Department Clock — Modern Icons</title>
-  <meta http-equiv="Cache-Control" content="no-store" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Communication Center</title>
   <style>
-    :root {
-      --wx-left-w: 260px;
-      --pad: 12px;
-
-      /* NWS colors */
-      --warn: #F54927;
-      --watch: #F5E027;
-      --adv: #F5AD27;
+    :root{
+      --bg:#020b19;--panel:rgba(3,16,32,.76);--line:rgba(132,169,204,.28);
+      --text:#f3f7fb;--muted:#aebfd0;--accent:#38bdf8;--ok:#53d18d;
+      --warn:#f59e0b;--danger:#ef4444;--pad:clamp(12px,1.15vw,22px);
+      --gap:clamp(10px,1vw,18px);--radius:clamp(8px,.7vw,13px);
+      --header-h:clamp(48px,5.7vh,70px);--footer-h:clamp(145px,20vh,220px);
     }
-
-    html, body {
-      margin: 0; padding: 0;
-      background: #000; color: #fff;
-      font-family: Segoe UI Mono, monospace;
-      height: 100%; overflow: hidden;
-      display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
-    }
-
-    /* ==== CLOCK ==== */
-    #clock {
-      display: flex; align-items: baseline; flex-wrap: wrap;
-      font-size: 26vw;             /* fallback — JS will auto-fit */
-      margin-top: 4vh;             /* fallback — JS will auto-fit */
-    }
-    #time-main span { margin: 0; padding: 0; letter-spacing: -0.05em; }
-    .colon { margin: 0 0.2vw; }
-    #time-seconds { font-size: 7vw; margin-left: 3vw; }
-    #date { font-size: 4.5vw; margin-top: 2vh; margin-bottom: 2.2vh; }
-
-    /* ==== ALERTS ==== */
-    #alerts {
-      position: absolute; left: 10px; right: 10px; bottom: calc( var(--forecast-height, 160px) + 10px );
-      display: none;
-      background: #000;
-      text-align: center;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font: 14px/1.2 Arial, sans-serif;
-      overflow: hidden;
-      border: 0px solid rgba(255,255,255,0.15);
-    }
-    #alerts-inner { display: flex; flex-direction: column; will-change: transform; }
-    .alert-item {
-      padding: 4px 8px; margin: 2px 0;
-      border-radius: 6px;
-      border: 1px solid; background: transparent;
-      font-weight: 600;
-    }
-    .is-warning  { border-color: var(--warn);  color: var(--warn); }
-    .is-watch    { border-color: var(--watch); color: var(--watch); }
-    .is-advisory { border-color: var(--adv);   color: var(--adv); }
-
-    /* ==== FORECAST STRIP ==== */
-    #forecast-wrap {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: #111;
-      padding: var(--pad);
-      display: grid;
-      grid-template-columns: var(--wx-left-w) 1fr;  /* fixed left | flexible center */
-      align-items: center; gap: 14px;
-    }
-
-    /* LEFT stack */
-    #wx-left {
-      display: flex; flex-direction: column; gap: 6px;
-      white-space: nowrap; font: 20px/1.2 Arial, sans-serif; color: #ddd;
-      min-width: var(--wx-left-w);
-      margin-left: 16px; /* spacing from the left edge */
-    }
-    .info-row { display: flex; align-items: center; gap: 8px; }
-
-    .weather-icon { width: 28px; height: 28px; object-fit: contain; }
-    .weather-icon.wind { width: 30px; height: 30px; }
-
-    /* CENTER: hourly forecast */
-    #forecast-bar {
-      grid-column: 2; min-width: 0;
-      white-space: nowrap; overflow-x: auto; overflow-y: hidden;
-      display: flex; gap: 10px; justify-content: flex-start; align-items: flex-start;
-      min-height: 150px; max-height: 160px; padding: 0 4px;
-      scrollbar-width: none;
-    }
-    #forecast-bar::-webkit-scrollbar { display: none; }
-
-    .forecast-item {
-      flex: 0 0 auto; width: 120px;
-      text-align: center; color: #fff;
-      font-size: 1.05vw; max-width: 22vw;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    }
-    .label-time { font-weight: 800; margin-bottom: 2px; letter-spacing: 0.01em; }
-
-    /* Bigger Temp + Precip */
-    .temp-text {
-      font: 800 22px/1.2 Arial, sans-serif;  /* bigger temperature */
-      margin: 4px 0 0;
-    }
-    .precip-text {
-      font: 700 19px/1.2 Arial, sans-serif;  /* bigger precip chance */
-      color: #60a5fa;
-      margin-top: 2px;
-    }
-
-    .row-rain { display: inline-flex; align-items: center; gap: 6px; }
-    .row-rain svg { width: 18px; height: 18px; }
-    .row-rain path { fill:#60a5fa; }
-
-    /* Heartbeat */
-    #heartbeat { position: absolute; bottom: 10px; right: 10px; width: 12px; height: 12px; background: lime; border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
-
-    /* Modern weather icon styling */
-    .wx-icon { width: 64px; height: 64px; }
-    .forecast-item .wx-icon { margin: 2px 0 4px; }
-    .wx-stroke { stroke: #e5e7eb; stroke-width: 1.75; fill: none; }
-    .wx-fill   { fill: #e5e7eb; }
-    .wx-accent { fill: #60a5fa; }       /* precip accent */
-    .wx-warn   { fill: #f59e0b; }       /* sun/accent */
-    .wx-dim    { opacity: .85; }
-
-    @keyframes drip { 0%{transform:translateY(-1px)} 50%{transform:translateY(2px)} 100%{transform:translateY(-1px)} }
-    .wx-drop { animation: drip 2.4s ease-in-out infinite; }
-
-    /* Responsive fallback */
-    @media (min-width: 1800px){ #clock{font-size:24vw} #time-seconds{font-size:6vw} #date{font-size:4vw} }
-    @media (max-width: 1100px) {
-      .forecast-item { width: 112px; }
-      .wx-icon { width: 56px; height: 56px; }
-    }
-    @media (max-width: 800px) {
-      #clock{font-size:28vw} #time-seconds{font-size:8vw} #date{font-size:5vw}
-      .forecast-item{ width: 100px; }
-      #wx-left { font-size: 12px; }
-      .temp-text { font-size: 18px; }
-      .precip-text { font-size: 16px; }
-      .wx-icon { width: 52px; height: 52px; }
-    }
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden}
+    body{font-family:Segoe UI,Arial,sans-serif;color:var(--text);background:var(--bg);font-variant-numeric:tabular-nums}
+    body::before{content:"";position:fixed;inset:0;background:linear-gradient(rgba(0,10,24,.80),rgba(0,10,24,.90)),var(--background-image,none) center/cover no-repeat;z-index:-1}
+    .app{height:100dvh;min-height:100vh;padding:var(--pad);display:grid;grid-template-rows:var(--header-h) minmax(0,1fr) var(--footer-h);gap:var(--gap)}
+    header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);min-width:0}
+    .brand{font-size:clamp(18px,1.45vw,29px);font-weight:700;letter-spacing:.025em;white-space:nowrap}
+    .statusbar{display:flex;align-items:center;gap:clamp(10px,1.2vw,22px);font-size:clamp(11px,.78vw,15px);color:var(--muted);white-space:nowrap}
+    .status{display:flex;align-items:center;gap:7px;font-weight:700;color:var(--text)}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}.status.delayed .dot{background:var(--warn)}.status.error .dot{background:var(--danger)}
+    main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap);min-height:0}
+    .clock-panel,.video-panel{min-width:0;min-height:0}
+    .clock-panel{display:flex;align-items:center;justify-content:center}
+    .clock-wrap{width:100%;padding-inline:clamp(4px,2vw,34px)}
+    .time-row{display:flex;align-items:flex-start;justify-content:center;white-space:nowrap;line-height:.82}
+    #time{font-size:clamp(100px,20vw,390px);font-weight:650;letter-spacing:-.07em}
+    #seconds{font-size:clamp(28px,4.2vw,82px);font-weight:600;color:var(--muted);margin:.05em 0 0 .2em}
+    #date{margin-top:clamp(20px,3vh,42px);font-size:clamp(21px,2vw,40px);font-weight:600;color:#d6e1ec;text-align:left}
+    .video-panel{display:flex;align-items:center;justify-content:center}
+    .video-shell{width:100%;max-height:100%;aspect-ratio:16/9;position:relative;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:rgba(2,12,25,.88)}
+    #videoFrame{width:100%;height:100%;display:block;border:0}.video-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--muted);font-size:clamp(16px,1.25vw,24px);background:rgba(2,12,25,.98)}
+    footer{display:grid;grid-template-columns:minmax(270px,1fr) minmax(360px,1.45fr) minmax(260px,1fr);gap:var(--gap);border-top:1px solid var(--line);padding-top:var(--gap);min-height:0}
+    .footer-section{min-width:0;min-height:0;display:flex;align-items:center}
+    .current{gap:clamp(12px,1.2vw,22px)}.current-icon{width:clamp(56px,4.7vw,88px);height:clamp(56px,4.7vw,88px);object-fit:contain}
+    .temp{font-size:clamp(42px,4.4vw,86px);font-weight:650;line-height:.95}.condition{font-size:clamp(13px,1vw,20px);color:var(--muted);margin-top:8px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 18px;margin-left:auto;font-size:clamp(11px,.82vw,16px);color:var(--muted)}.metric b{display:block;color:var(--text);font-weight:600;margin-top:2px}
+    .notice{width:100%;border:1px solid var(--line);border-radius:var(--radius);padding:clamp(12px,1vw,18px);font-size:clamp(16px,1.15vw,23px);line-height:1.35;display:flex;align-items:center;justify-content:center;text-align:center;min-height:70px;position:relative}.notice.important{border-left:4px solid var(--warn)}.notice.urgent{border-left:4px solid var(--danger)}
+    .notice-count{position:absolute;right:10px;bottom:7px;color:var(--muted);font-size:11px}
+    .alerts{width:100%;padding-left:clamp(8px,1vw,18px)}.alert-title{font-size:clamp(16px,1.25vw,24px);font-weight:650}.alert-detail{font-size:clamp(12px,.9vw,17px);color:var(--muted);margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.alerts.warning{border-left:4px solid var(--danger)}.alerts.watch{border-left:4px solid #facc15}.alerts.advisory{border-left:4px solid var(--warn)}
+    .forecast-strip{position:absolute;left:var(--pad);right:var(--pad);bottom:calc(var(--footer-h) + var(--gap) + var(--pad));display:none;grid-template-columns:repeat(var(--forecast-count,6),1fr);gap:8px;pointer-events:none}
+    .forecast-item{background:rgba(3,16,32,.90);border:1px solid var(--line);border-radius:9px;padding:8px;text-align:center;font-size:clamp(10px,.72vw,14px)}.forecast-item img{width:clamp(28px,2.4vw,46px);height:clamp(28px,2.4vw,46px)}.forecast-temp{font-size:clamp(15px,1.1vw,22px);font-weight:650}.forecast-pop{color:#7dd3fc}
+    @media(max-width:1500px){:root{--footer-h:150px}.statusbar .optional{display:none}.metrics{gap:5px 10px}.forecast-strip{display:none!important}}
+    @media(min-width:1900px){.forecast-strip.ready{display:grid}main{padding-bottom:clamp(70px,8vh,110px)}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <div id="clock">
-    <div id="time-main">
-      <span id="hour">00</span><span class="colon">:</span><span id="minute">00</span>
+<div class="app">
+  <header>
+    <div id="brand" class="brand">COMMUNICATION CENTER</div>
+    <div class="statusbar">
+      <div id="status" class="status"><span class="dot"></span><span id="statusText">LIVE</span></div>
+      <span id="updated">Updated --:--</span>
+      <span class="optional">NWS</span>
     </div>
-    <div id="time-seconds">00</div>
-  </div>
-
-  <div id="date">Loading...</div>
-
-  <!-- Alerts banner -->
-  <div id="alerts"><div id="alerts-inner"></div></div>
-
-  <!-- Forecast row -->
-  <div id="forecast-wrap">
-    <!-- LEFT: Sunrise/Sunset/Wind/Humidity (stacked) -->
-    <div id="wx-left">
-      <div class="info-row">
-        <img id="icon-sunrise" class="weather-icon" alt="Sunrise">
-        <span>Sunrise <span id="sr-time">--:--</span></span>
+  </header>
+  <main>
+    <section class="clock-panel">
+      <div class="clock-wrap">
+        <div class="time-row"><div id="time">00:00</div><div id="seconds">00</div></div>
+        <div id="date">Loading date…</div>
       </div>
-      <div class="info-row">
-        <img id="icon-sunset" class="weather-icon" alt="Sunset">
-        <span>Sunset <span id="ss-time">--:--</span></span>
+    </section>
+    <section class="video-panel">
+      <div class="video-shell">
+        <iframe id="videoFrame" title="Information Feed" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <div id="videoFallback" class="video-fallback">Information feed unavailable</div>
       </div>
-      <div class="info-row">
-        <img id="icon-wind" class="weather-icon wind" alt="Wind">
-        <span id="wind-text">-- mph --</span>
+    </section>
+  </main>
+  <footer>
+    <section class="footer-section current">
+      <img id="currentIcon" class="current-icon" src="windsock.gif" alt="Current weather">
+      <div><div id="temperature" class="temp">--°F</div><div id="condition" class="condition">Weather unavailable</div></div>
+      <div class="metrics">
+        <div class="metric">Wind<b id="wind">--</b></div><div class="metric">Humidity<b id="humidity">--%</b></div>
+        <div class="metric">Sunrise<b id="sunrise">--:--</b></div><div class="metric">Sunset<b id="sunset">--:--</b></div>
       </div>
-      <div class="info-row">
-        <img id="icon-humidity" class="weather-icon" alt="Relative Humidity">
-        <span id="humidity-text">--%</span>
-      </div>
-    </div>
-
-    <!-- CENTER: Forecast bar -->
-    <div id="forecast-bar">Loading forecast...</div>
-  </div>
-
-  <div id="heartbeat" title="Running..."></div>
-
-  <script>
-    /* =============== ICON PACK (LOCAL) for left stack =============== */
-    const ICON_BASE = './Weather Icons/';
-    function setIconSources() {
-      const files = {
-        'icon-sunrise':  'sunrise-96.png',
-        'icon-sunset':   'sunset-96.png',
-        'icon-wind':     'wind-96.png',
-        'icon-humidity': 'humidity-96.png'
-      };
-      Object.entries(files).forEach(([id, file]) => {
-        const el = document.getElementById(id);
-        if (el) el.src = ICON_BASE + file;
-      });
-    }
-
-    /* =============== CLOCK =============== */
-    function updateClock() {
-      const now = new Date();
-      const [h,m,s] = now.toLocaleTimeString("en-US", { timeZone: "America/Denver", hour12: false }).split(":");
-      document.getElementById("hour").textContent = h;
-      document.getElementById("minute").textContent = m;
-      document.getElementById("time-seconds").textContent = s;
-
-      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      document.getElementById("date").textContent =
-        `${days[now.getDay()]} – ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
-    }
-
-    // Auto-fit clock to available space (above forecast strip)
-    function fitClock() {
-      const clock  = document.getElementById('clock');
-      const timeMain = document.getElementById('time-main');
-      const secs   = document.getElementById('time-seconds');
-      const dateEl = document.getElementById('date');
-      const wrap   = document.getElementById('forecast-wrap');
-
-      const pad = 4;
-      const barH = wrap ? wrap.offsetHeight : 0;
-      const availableH = window.innerHeight - barH - pad * 2;
-      const availableW = window.innerWidth  - pad * 2;
-
-      let base = Math.min(availableW * 0.30, availableH * 0.50);
-      const apply = f => {
-        clock.style.fontSize = f + 'px';
-        secs.style.fontSize  = Math.round(f * 0.32) + 'px';
-        dateEl.style.fontSize= Math.round(f * 0.22) + 'px';
-        clock.style.marginTop= Math.round(f * 0.15) + 'px';
-        dateEl.style.marginTop= Math.round(f * 0.12) + 'px';
-        dateEl.style.marginBottom= Math.round(f * 0.14) + 'px';
-      };
-      apply(base);
-      for (let i=0;i<25;i++){
-        const totalH = clock.offsetHeight + dateEl.offsetHeight + pad;
-        const totalW = timeMain.offsetWidth + secs.offsetWidth + pad;
-        if (totalH > availableH || totalW > availableW) { base *= 0.96; apply(base); } else break;
-      }
-    }
-
-    /* =============== SUNRISE/SUNSET (offline calc) =============== */
-    const LAT = 48.197, LON = -114.315; // Kalispell
-    const deg2rad = x=>x*Math.PI/180, rad2deg = x=>x*180/Math.PI;
-    function toDenverLocal(date){
-      return date.toLocaleTimeString('en-US', {
-        timeZone: 'America/Denver', hour12: false, hour:'2-digit', minute:'2-digit'
-      });
-    }
-    function dayOfYear(d){
-      const s=new Date(d.getFullYear(),0,0);
-      const diff=d - s + (s.getTimezoneOffset()-d.getTimezoneOffset())*60000;
-      return Math.floor(diff/86400000);
-    }
-    function solarTimes(date, lat, lon){
-      const N = dayOfYear(date), lngHour = lon/15;
-      function calc(isSunrise){
-        const t = N + ((isSunrise?6:18) - lngHour)/24;
-        const M = (0.9856*t)-3.289;
-        const L = (M + 1.916*Math.sin(deg2rad(M)) + 0.020*Math.sin(deg2rad(2*M)) + 282.634) % 360;
-        const RA0 = rad2deg(Math.atan(0.91764*Math.tan(deg2rad(L))));
-        const RA = (RA0 + (Math.floor(L/90)*90 - Math.floor(RA0/90)*90))/15;
-        const sinDec = 0.39782*Math.sin(deg2rad(L));
-        const cosDec = Math.cos(Math.asin(sinDec));
-        const cosH = (Math.cos(deg2rad(90.833)) - (sinDec*Math.sin(deg2rad(lat))))/(cosDec*Math.cos(deg2rad(lat)));
-        if (cosH < -1 || cosH > 1) return null;
-        const Hdeg = rad2deg(Math.acos(cosH));
-        const H = (isSunrise ? 360 - Hdeg : Hdeg) / 15;
-        const T = H + RA - (0.06571*t) - 6.622;
-        const UT = (T - lngHour + 24) % 24;
-        return new Date(Date.UTC(
-          date.getFullYear(), date.getMonth(), date.getDate(),
-          Math.floor(UT), Math.floor((UT%1)*60)
-        ));
-      }
-      return { sunriseUTC: calc(true), sunsetUTC: calc(false) };
-    }
-    function updateSun(){
-      const today = new Date();
-      const { sunriseUTC, sunsetUTC } = solarTimes(today, LAT, LON);
-      document.getElementById('sr-time').textContent = sunriseUTC ? toDenverLocal(sunriseUTC) : '--:--';
-      document.getElementById('ss-time').textContent = sunsetUTC ? toDenverLocal(sunsetUTC) : '--:--';
-    }
-
-    /* =============== NOAA: HOURLY FORECAST + NWS ALERTS =============== */
-    const POINT_URL = `https://api.weather.gov/points/${LAT},${LON}`;
-let cachedHourlyUrl = null;
-
-async function getHourlyForecastUrl() {
-  if (cachedHourlyUrl) return cachedHourlyUrl;
-
-  const response = await fetch(POINT_URL, {
-    headers: {
-      Accept: "application/geo+json"
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`NWS point lookup failed: HTTP ${response.status}`);
-  }
-
-  const data = await response.json();
-  cachedHourlyUrl = data?.properties?.forecastHourly;
-
-  if (!cachedHourlyUrl) {
-    throw new Error("NWS did not return an hourly forecast URL");
-  }
-
-  return cachedHourlyUrl;
-}
-    const ALERTS_URL = `https://api.weather.gov/alerts/active?point=${LAT},${LON}&status=actual&message_type=alert`;
-
-    // Modern icon mapping
-    function pickIconId(shortForecast = "", isNight = false) {
-      const s = shortForecast.toLowerCase();
-      if (s.includes("thunder")) return "wx-storm";
-      if (s.includes("snow") || s.includes("sleet") || s.includes("flurr")) return "wx-snow";
-      if (s.includes("rain") || s.includes("showers") || s.includes("drizzle")) return "wx-rain";
-      if (s.includes("fog") || s.includes("mist") || s.includes("haze")) return "wx-fog";
-      if (s.includes("wind")) return "wx-wind";
-      if (s.includes("cloudy") || s.includes("overcast")) return "wx-cloud";
-      if (s.includes("partly") || s.includes("mostly")) return isNight ? "wx-partly-night" : "wx-partly";
-      return isNight ? "wx-moon" : "wx-sun";
-    }
-    function isNightHour(dateObj) {
-      const h = dateObj.getHours();
-      return (h < 6 || h >= 20);
-    }
-
-    const pct = v => (v==null || isNaN(v)) ? '--%' : `${Math.round(v)}%`;
-    const makeRainRow = v => `
-      <span class="row-rain" title="Chance of Precipitation">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2c-3 4-6 7-6 10a6 6 0 1 0 12 0c0-3-3-6-6-10z"/>
-        </svg>
-        <span class="precip-text">${pct(v)}</span>
-      </span>`;
-
-    function makeItem(label, _iconUrl, shortForecast, temp, pop, whenDate) {
-      const iconId = pickIconId(shortForecast, isNightHour(whenDate || new Date()));
-      return `
-        <div class="forecast-item">
-          <div class="label-time">${label}</div>
-          <svg class="wx-icon" viewBox="0 0 64 64" aria-hidden="true">
-            <use href="#${iconId}"></use>
-          </svg>
-          <div class="temp-text">${temp}</div>
-          ${makeRainRow(pop)}
-        </div>`;
-    }
-
-    function setWind(speedStr, dirStr){
-      const speed = speedStr || '-- mph';
-      const dir   = dirStr || '--';
-      document.getElementById('wind-text').textContent = `${speed} ${dir}`;
-    }
-    function setHumidity(rhVal){
-      document.getElementById('humidity-text').textContent = `${pct(rhVal)}`;
-    }
-
-    function classifyAlert(txt){
-      const t = (txt || '').toLowerCase();
-      if (t.includes('warning')) return 'is-warning';
-      if (t.includes('watch'))   return 'is-watch';
-      if (t.includes('advisory'))return 'is-advisory';
-      return 'is-advisory';
-    }
-
-    let alertItems = [];
-    let alertIndex = 0;
-    let alertTimer = null;
-
-    function startAlertScroll(){
-      const box = document.getElementById('alerts');
-      const inner = document.getElementById('alerts-inner');
-      if(alertItems.length <= 1){
-        clearInterval(alertTimer);
-        inner.style.transition = 'none';
-        inner.style.transform = 'translateY(0)';
-        return;
-      }
-      clearInterval(alertTimer);
-      const stepMs = 4500;
-      alertIndex = 0;
-      inner.style.transition = 'none';
-      inner.style.transform = 'translateY(0)';
-      alertTimer = setInterval(()=>{
-        alertIndex = (alertIndex + 1) % alertItems.length;
-        inner.style.transition = 'transform 600ms ease';
-        const itemH = inner.children[0]?.clientHeight || 0;
-        inner.style.transform = `translateY(-${alertIndex * (itemH + 4)}px)`;
-      }, stepMs);
-    }
-
-    async function loadAlerts(){
-      try{
-        const res = await fetch(ALERTS_URL);
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const feats = data?.features || [];
-        const box   = document.getElementById('alerts');
-        const inner = document.getElementById('alerts-inner');
-
-        if(feats.length){
-          inner.innerHTML = '';
-          alertItems = feats.map(f=>{
-            const p = f?.properties || {};
-            const headline = p.headline || p.event || 'Severe Weather Alert';
-            const cls = classifyAlert(headline);
-            const div = document.createElement('div');
-            div.className = `alert-item ${cls}`;
-            div.textContent = headline;
-            inner.appendChild(div);
-            return {headline, cls};
-          });
-          box.style.display = 'block';
-          startAlertScroll();
-        } else {
-          box.style.display = 'none';
-          inner.innerHTML = '';
-          clearInterval(alertTimer);
-          alertItems = [];
-        }
-      }catch{
-        const box = document.getElementById('alerts');
-        const inner = document.getElementById('alerts-inner');
-        box.style.display = 'none';
-        inner.innerHTML = '';
-        clearInterval(alertTimer);
-        alertItems = [];
-      }
-    }
-
-    function adjustForecastLayout() {
-      const bar = document.getElementById('forecast-bar');
-      requestAnimationFrame(() => {
-        bar.style.justifyContent = (bar.scrollWidth <= bar.clientWidth)
-          ? 'space-between' : 'flex-start';
-      });
-    }
-
-    async function updateNOAAForecast() {
-      try {
-        const hourlyUrl = await getHourlyForecastUrl();
-
-const response = await fetch(hourlyUrl, {
-  headers: {
-    Accept: "application/geo+json"
-  }
-});
-        if (!response.ok) throw new Error("Offline or NOAA unavailable");
-
-        let periods = (await response.json()).properties.periods || [];
-
-        // Keep this hour and forward (cap to 12)
-        const cut = new Date(); cut.setMinutes(0,0,0);
-        periods = periods.filter(p => new Date(p.startTime) >= cut).slice(0, 12);
-        if(!periods.length) throw new Error("No upcoming hours");
-
-        const bar = document.getElementById("forecast-bar");
-        bar.innerHTML = "";
-
-        // Find period covering "now", else fallback to first future period
-        const now = new Date();
-        const present = periods.find(p => {
-          const st = new Date(p.startTime);
-          const et = new Date(p.endTime);
-          return now >= st && now < et;
-        }) || periods[0];
-
-        // 1) PREPEND Present (left)
-        bar.insertAdjacentHTML('beforeend',
-          makeItem(
-            'Present',
-            present.icon,
-            present.shortForecast,
-            `${present.temperature}°${present.temperatureUnit}`,
-            present.probabilityOfPrecipitation?.value,
-            new Date(present.startTime)
-          )
-        );
-
-        // 2) Then render hourly items but SKIP the present's hour block
-        periods.forEach(period => {
-          if (period.startTime === present.startTime) return;
-          const d = new Date(period.startTime);
-          const h = String(d.getHours()).padStart(2, '0');
-          const m = String(d.getMinutes()).padStart(2, '0');
-          bar.insertAdjacentHTML('beforeend',
-            makeItem(
-              `${h}:${m}`,
-              period.icon,
-              period.shortForecast,
-              `${period.temperature}°${period.temperatureUnit}`,
-              period.probabilityOfPrecipitation?.value,
-              d
-            )
-          );
-        });
-
-        // Left panel "current" stats from the present period
-        setWind(present.windSpeed, present.windDirection);
-        setHumidity(present.relativeHumidity?.value);
-
-        fitClock();
-        adjustForecastLayout();
-        setTimeout(adjustForecastLayout, 150);
-      } catch (err) {
-        const bar = document.getElementById("forecast-bar");
-        bar.innerHTML = `<span style="font-family:Arial,sans-serif;color:#bbb;font-size:14px;">Weather unavailable (${err.message || 'Failed to fetch'})</span>`;
-        setWind('-- mph','--');
-        setHumidity(null);
-        fitClock();
-      }
-    }
-
-    // === INIT ===
-    (function init(){
-      // Icons
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setIconSources);
-      } else { setIconSources(); }
-
-      // Clock
-      setInterval(updateClock, 1000); updateClock();
-
-      // Reload exactly at top of hour
-      (function(){
-        const t = new Date();
-        const ms = (60 - t.getMinutes())*60000 - t.getSeconds()*1000 - t.getMilliseconds();
-        setTimeout(()=>location.reload(), Math.max(0, ms));
-      })();
-
-      // Sun times
-      updateSun();
-
-      // Weather + Alerts
-      updateNOAAForecast();
-      loadAlerts();
-      setInterval(updateNOAAForecast, 10 * 60 * 1000);
-      setInterval(loadAlerts, 5 * 60 * 1000);
-
-      // Layout
-      window.addEventListener('load', fitClock);
-      window.addEventListener('resize', () => { fitClock(); adjustForecastLayout(); });
-    })();
-  </script>
-
-  <!-- Inline SVG Sprite (modern, minimal) -->
-  <svg width="0" height="0" style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
-    <!-- Sun -->
-    <symbol id="wx-sun" viewBox="0 0 64 64">
-      <circle cx="32" cy="32" r="12" class="wx-warn"></circle>
-      <g class="wx-warn wx-dim">
-        <rect x="31" y="6" width="2" height="10" rx="1"></rect>
-        <rect x="31" y="48" width="2" height="10" rx="1"></rect>
-        <rect x="6" y="31" width="10" height="2" rx="1"></rect>
-        <rect x="48" y="31" width="10" height="2" rx="1"></rect>
-        <rect x="12" y="12" width="2" height="10" transform="rotate(-45 13 17)"></rect>
-        <rect x="50" y="42" width="2" height="10" transform="rotate(-45 51 47)"></rect>
-        <rect x="42" y="12" width="2" height="10" transform="rotate(45 43 17)"></rect>
-        <rect x="12" y="42" width="2" height="10" transform="rotate(45 13 47)"></rect>
-      </g>
-    </symbol>
-
-    <!-- Moon -->
-    <symbol id="wx-moon" viewBox="0 0 64 64">
-      <path class="wx-fill wx-dim" d="M40 10a18 18 0 1 0 8 34a16 16 0 1 1 -8 -34z"></path>
-    </symbol>
-
-    <!-- Partly Cloudy (day) -->
-    <symbol id="wx-partly" viewBox="0 0 64 64">
-      <use href="#wx-sun"></use>
-      <path class="wx-fill" d="M20 44h26a8 8 0 0 0 0-16c-.6 0-1.2.05-1.8.16A12 12 0 0 0 20 32a8 8 0 0 0 0 12z"></path>
-    </symbol>
-
-    <!-- Partly Cloudy (night) -->
-    <symbol id="wx-partly-night" viewBox="0 0 64 64">
-      <use href="#wx-moon"></use>
-      <path class="wx-fill" d="M20 44h26a8 8 0 0 0 0-16c-.6 0-1.2.05-1.8.16A12 12 0 0 0 20 32a8 8 0 0 0 0 12z"></path>
-    </symbol>
-
-    <!-- Cloud -->
-    <symbol id="wx-cloud" viewBox="0 0 64 64">
-      <path class="wx-fill" d="M18 46h28a10 10 0 0 0 0-20c-.8 0-1.6.08-2.3.24A14 14 0 0 0 18 28a10 10 0 0 0 0 18z"></path>
-    </symbol>
-
-    <!-- Rain -->
-    <symbol id="wx-rain" viewBox="0 0 64 64">
-      <use href="#wx-cloud"></use>
-      <circle cx="24" cy="52" r="3" class="wx-accent wx-drop"></circle>
-      <circle cx="36" cy="56" r="3" class="wx-accent wx-drop" style="animation-delay:.3s"></circle>
-      <circle cx="48" cy="52" r="3" class="wx-accent wx-drop" style="animation-delay:.15s"></circle>
-    </symbol>
-
-    <!-- Snow -->
-    <symbol id="wx-snow" viewBox="0 0 64 64">
-      <use href="#wx-cloud"></use>
-      <path class="wx-fill" d="M24 56l2-6 2 6-6-2 6-2-6 2zM36 56l2-6 2 6-6-2 6-2-6 2zM48 56l2-6 2 6-6-2 6-2-6 2z"></path>
-    </symbol>
-
-    <!-- Thunderstorm -->
-    <symbol id="wx-storm" viewBox="0 0 64 64">
-      <use href="#wx-cloud"></use>
-      <path class="wx-warn" d="M34 38l-6 10h6l-4 10l12-14h-6l4-6z"></path>
-    </symbol>
-
-    <!-- Wind -->
-    <symbol id="wx-wind" viewBox="0 0 64 64">
-      <path class="wx-stroke" d="M10 30h28a6 6 0 1 0-6-6"></path>
-      <path class="wx-stroke" d="M6 40h36a7 7 0 1 1-7 7"></path>
-    </symbol>
-
-    <!-- Fog -->
-    <symbol id="wx-fog" viewBox="0 0 64 64">
-      <use href="#wx-cloud"></use>
-      <path class="wx-stroke" d="M12 48h40M16 54h36"></path>
-    </symbol>
-  </svg>
+    </section>
+    <section class="footer-section"><div id="notice" class="notice">No active department notices</div></section>
+    <section class="footer-section"><div id="alerts" class="alerts"><div class="alert-title">Checking weather alerts…</div><div class="alert-detail"></div></div></section>
+  </footer>
+</div>
+<div id="forecast" class="forecast-strip"></div>
+<script>
+'use strict';
+let CONFIG={};let currentConfigText='';let noticeTimer=null;let activeNoticeIndex=0;let weatherBusy=false;let alertsBusy=false;let hourlyUrl='';let stationsUrl='';let stationId='';
+const $=id=>document.getElementById(id);const cacheKey='cc-weather-v3';const alertCacheKey='cc-alerts-v3';
+const fetchJson=async(url,timeout=12000)=>{const c=new AbortController();const t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{headers:{Accept:'application/geo+json'},cache:'no-store',signal:c.signal});if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);return await r.json()}finally{clearTimeout(t)}};
+function setStatus(type,text){$('status').className='status '+(type||'');$('statusText').textContent=text}
+function fmtTime(d,tz){return new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d)}
+function updateClock(){const tz=CONFIG.timeZone||'America/Denver',now=new Date();const parts=new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(now);const get=t=>parts.find(p=>p.type===t)?.value||'00';$('time').textContent=`${get('hour')}:${get('minute')}`;$('seconds').textContent=get('second');$('date').textContent=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(now)}
+function youtubeId(v=''){v=v.trim();if(/^[\w-]{11}$/.test(v))return v;try{const u=new URL(v);if(u.hostname.includes('youtu.be'))return u.pathname.split('/').filter(Boolean)[0]||'';if(u.pathname.startsWith('/embed/')||u.pathname.startsWith('/live/'))return u.pathname.split('/')[2]||'';return u.searchParams.get('v')||''}catch{return ''}}
+function setVideo(){const f=$('videoFrame'),fb=$('videoFallback'),id=youtubeId(CONFIG.youtubeUrl||'');if(!CONFIG.showVideo||!id){f.removeAttribute('src');f.style.display='none';fb.style.display='flex';return}f.style.display='block';fb.style.display='none';f.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&loop=1&playlist=${id}`}
+function activeNotices(){const now=Date.now();const rank={urgent:0,important:1,normal:2};return (CONFIG.notices||[]).filter(n=>n.message?.trim()&&(!n.start||new Date(n.start).getTime()<=now)&&(!n.expires||new Date(n.expires).getTime()>now)).sort((a,b)=>(rank[a.priority||'normal']??2)-(rank[b.priority||'normal']??2))}
+function renderNotice(){const list=activeNotices(),el=$('notice');if(!list.length){el.className='notice';el.textContent='No active department notices';return}activeNoticeIndex%=list.length;const n=list[activeNoticeIndex];el.className=`notice ${n.priority||'normal'}`;el.innerHTML=`<span>${escapeHtml(n.message)}</span>${list.length>1?`<span class="notice-count">${activeNoticeIndex+1} of ${list.length}</span>`:''}`;activeNoticeIndex=(activeNoticeIndex+1)%list.length}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function startNoticeRotation(){clearInterval(noticeTimer);activeNoticeIndex=0;renderNotice();noticeTimer=setInterval(renderNotice,Math.max(5,CONFIG.noticeRotationSeconds||10)*1000)}
+async function loadConfig(initial=false){try{const r=await fetch(`config.json?v=${Date.now()}`,{cache:'no-store'});if(!r.ok)throw new Error(r.status);const text=await r.text();if(text===currentConfigText&&!initial)return;currentConfigText=text;CONFIG=JSON.parse(text);$('brand').textContent=CONFIG.facilityName||'COMMUNICATION CENTER';document.documentElement.style.setProperty('--background-image',`url("${CONFIG.backgroundImage||'background.png'}")`);setVideo();startNoticeRotation();if(initial||!hourlyUrl)await refreshWeather(true)}catch(e){console.error('Config',e);if(!Object.keys(CONFIG).length)setStatus('error','CONFIG ERROR')}}
+const cToF=c=>Math.round(c*9/5+32),kphToMph=k=>Math.round(k*.621371),dir=d=>{if(d==null)return'--';return['N','NE','E','SE','S','SW','W','NW'][Math.round(d/45)%8]};
+function solar(date,lat,lon,rise){const N=Math.floor((Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate())-Date.UTC(date.getUTCFullYear(),0,0))/86400000),lng=lon/15,t=N+((rise?6:18)-lng)/24,M=.9856*t-3.289,L=(M+1.916*Math.sin(M*Math.PI/180)+.020*Math.sin(2*M*Math.PI/180)+282.634+360)%360,RA=(Math.atan(.91764*Math.tan(L*Math.PI/180))*180/Math.PI+360)%360,RAh=(RA+(Math.floor(L/90)*90-Math.floor(RA/90)*90))/15,sinDec=.39782*Math.sin(L*Math.PI/180),cosDec=Math.cos(Math.asin(sinDec)),cosH=(Math.cos(90.833*Math.PI/180)-sinDec*Math.sin(lat*Math.PI/180))/(cosDec*Math.cos(lat*Math.PI/180));if(Math.abs(cosH)>1)return null;const H=(rise?360-Math.acos(cosH)*180/Math.PI:Math.acos(cosH)*180/Math.PI)/15,T=H+RAh-.06571*t-6.622,UT=(T-lng+24)%24;return new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate(),Math.floor(UT),Math.round((UT%1)*60)))}
+function renderWeather(w,cached=false){$('temperature').textContent=w.tempF==null?'--°F':`${w.tempF}°F`;$('condition').textContent=w.description||'Weather unavailable';$('wind').textContent=w.wind||'--';$('humidity').textContent=w.humidity==null?'--%':`${Math.round(w.humidity)}%`;$('updated').textContent=`Updated ${w.updated?fmtTime(new Date(w.updated),CONFIG.timeZone):'--:--'}`;const lat=CONFIG.location?.latitude,lon=CONFIG.location?.longitude;if(Number.isFinite(lat)&&Number.isFinite(lon)){$('sunrise').textContent=fmtTime(solar(new Date(),lat,lon,true),CONFIG.timeZone);$('sunset').textContent=fmtTime(solar(new Date(),lat,lon,false),CONFIG.timeZone)}renderForecast(w.periods||[]);setStatus(cached?'delayed':'',cached?'WEATHER DELAYED':'LIVE')}
+function renderForecast(periods){const n=Math.min(CONFIG.forecastHours||6,periods.length),el=$('forecast');el.style.setProperty('--forecast-count',n);el.innerHTML=periods.slice(0,n).map(p=>`<div class="forecast-item"><div>${fmtTime(new Date(p.startTime),CONFIG.timeZone)}</div><img src="${p.icon||''}" alt=""><div class="forecast-temp">${p.temperature}°</div><div class="forecast-pop">${p.probabilityOfPrecipitation?.value??0}%</div></div>`).join('');el.classList.toggle('ready',n>0)}
+async function refreshWeather(force=false){if(weatherBusy)return;const lat=CONFIG.location?.latitude,lon=CONFIG.location?.longitude;if(!Number.isFinite(lat)||!Number.isFinite(lon)){setStatus('error','LOCATION REQUIRED');return}weatherBusy=true;try{if(force||!hourlyUrl||!stationsUrl){const p=await fetchJson(`https://api.weather.gov/points/${lat},${lon}`);hourlyUrl=p.properties.forecastHourly;stationsUrl=p.properties.observationStations;if(p.properties.timeZone&&!CONFIG.timeZone)CONFIG.timeZone=p.properties.timeZone}const [hourly,stations]=await Promise.all([fetchJson(hourlyUrl),stationId?Promise.resolve(null):fetchJson(stationsUrl)]);if(!stationId){const first=stations?.features?.[0]?.properties?.stationIdentifier;stationId=first||''}const obs=stationId?await fetchJson(`https://api.weather.gov/stations/${stationId}/observations/latest`):null;const op=obs?.properties||{},periods=hourly?.properties?.periods||[],present=periods[0]||{};const tempC=op.temperature?.value,windKph=op.windSpeed?.value,humidity=op.relativeHumidity?.value,w={tempF:tempC==null?present.temperature:cToF(tempC),description:op.textDescription||present.shortForecast,wind:windKph==null?`${present.windSpeed||'--'} ${present.windDirection||''}`.trim():`${kphToMph(windKph)} mph ${dir(op.windDirection?.value)}`,humidity,updated:op.timestamp||new Date().toISOString(),periods};localStorage.setItem(cacheKey,JSON.stringify(w));renderWeather(w,false)}catch(e){console.error('Weather',e);const c=localStorage.getItem(cacheKey);if(c)renderWeather(JSON.parse(c),true);else{setStatus('error','CONNECTION ERROR');$('condition').textContent='Weather unavailable'}}finally{weatherBusy=false}}
+function classifyAlert(a){const s=(a.severity||'').toLowerCase(),e=(a.event||'').toLowerCase();if(s==='extreme'||s==='severe'||e.includes('warning'))return'warning';if(e.includes('watch'))return'watch';if(e.includes('advisory'))return'advisory';return''}
+function renderAlerts(list,cached=false){const el=$('alerts');if(!list.length){el.className='alerts';el.innerHTML='<div class="alert-title">✓ No Active Weather Alerts</div><div class="alert-detail"></div>';return}const a=list[0];el.className=`alerts ${classifyAlert(a)}`;el.innerHTML=`<div class="alert-title">${escapeHtml(a.event||'Weather Alert')}</div><div class="alert-detail">${escapeHtml(a.headline||'')}${cached?' · Delayed':''}</div>`}
+async function refreshAlerts(){if(alertsBusy)return;const lat=CONFIG.location?.latitude,lon=CONFIG.location?.longitude;if(!Number.isFinite(lat)||!Number.isFinite(lon))return;alertsBusy=true;try{const d=await fetchJson(`https://api.weather.gov/alerts/active?point=${lat},${lon}&status=actual`);const list=(d.features||[]).map(f=>f.properties||{});localStorage.setItem(alertCacheKey,JSON.stringify(list));renderAlerts(list,false)}catch(e){console.error('Alerts',e);const c=localStorage.getItem(alertCacheKey);if(c)renderAlerts(JSON.parse(c),true);else $('alerts').innerHTML='<div class="alert-title">Weather alerts unavailable</div><div class="alert-detail"></div>'}finally{alertsBusy=false}}
+function init(){const wc=localStorage.getItem(cacheKey),ac=localStorage.getItem(alertCacheKey);if(wc)renderWeather(JSON.parse(wc),true);if(ac)renderAlerts(JSON.parse(ac),true);updateClock();setInterval(updateClock,1000);loadConfig(true).then(()=>refreshAlerts());setInterval(()=>loadConfig(false),30000);setInterval(()=>refreshWeather(false),600000);setInterval(refreshAlerts,300000);setInterval(()=>location.reload(),3600000)}
+init();
+</script>
 </body>
 </html>
