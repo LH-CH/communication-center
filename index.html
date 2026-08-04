@@ -122,26 +122,42 @@
 
     .current{
       display:grid;
-      grid-template-columns:auto auto minmax(160px,1fr);
+      grid-template-columns:minmax(220px,.95fr) minmax(230px,1.05fr);
       align-items:center;
-      gap:clamp(13px,1.2vw,22px);
+      column-gap:clamp(52px,4.6vw,96px);
       width:100%;
     }
 
-    .weather-icon{
-      width:clamp(52px,4.2vw,78px);
-      height:clamp(52px,4.2vw,78px);
-      color:#e6eef6;
-      flex:none;
-      opacity:.94;
+    .weather-summary{
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr);
+      align-items:center;
+      column-gap:clamp(18px,1.35vw,26px);
+      min-width:0;
     }
 
+    .weather-icon{
+      width:clamp(50px,3.7vw,66px);
+      height:clamp(50px,3.7vw,66px);
+      color:#dce8f2;
+      flex:none;
+    }
+
+    .weather-copy{min-width:0}
     .weather-icon svg,.metric-icon svg{width:100%;height:100%;display:block}
-    .temp{font-size:clamp(40px,3.9vw,76px);font-weight:610;line-height:.95}
+
+    .temp{
+      font-size:clamp(52px,4.4vw,82px);
+      font-weight:600;
+      letter-spacing:-.035em;
+      line-height:.88;
+      white-space:nowrap;
+    }
+
     .condition{
-      font-size:clamp(13px,.95vw,19px);
+      font-size:clamp(15px,1vw,19px);
       color:var(--muted);
-      margin-top:7px;
+      margin-top:clamp(8px,.65vw,12px);
       max-width:220px;
       white-space:nowrap;
       overflow:hidden;
@@ -150,16 +166,46 @@
 
     .metrics{
       display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:clamp(9px,.85vw,15px) clamp(14px,1.2vw,24px);
-      margin-left:auto;
-      font-size:clamp(11px,.8vw,15px);
+      grid-template-columns:repeat(2,minmax(92px,1fr));
+      column-gap:clamp(28px,2.4vw,48px);
+      row-gap:clamp(18px,1.5vw,28px);
+      width:100%;
+      font-size:clamp(12px,.82vw,15px);
       color:var(--muted);
     }
 
-    .metric{display:grid;grid-template-columns:18px 1fr;column-gap:7px;align-items:center}
-    .metric-icon{width:18px;height:18px;color:#8fb2ca;grid-row:1 / span 2}
-    .metric b{display:block;color:var(--text);font-weight:550;margin-top:1px}
+    .metric{
+      display:grid;
+      grid-template-columns:18px minmax(0,1fr);
+      grid-template-rows:auto auto;
+      column-gap:9px;
+      align-items:center;
+      min-width:0;
+    }
+
+    .metric-icon{
+      width:17px;
+      height:17px;
+      color:#89a9c0;
+      grid-row:1 / span 2;
+      align-self:center;
+    }
+
+    .metric span:last-child{
+      display:block;
+      line-height:1.15;
+      white-space:nowrap;
+    }
+
+    .metric b{
+      display:block;
+      color:var(--text);
+      font-size:clamp(15px,1.02vw,20px);
+      font-weight:600;
+      line-height:1.15;
+      margin-top:4px;
+      white-space:nowrap;
+    }
 
     .notice{
       width:100%;
@@ -199,8 +245,12 @@
 
     @media(max-width:1500px){
       :root{--footer-h:150px}
-      .statusbar{padding:6px 9px}
-      .metrics{gap:7px 12px}
+      .current{
+        grid-template-columns:minmax(190px,.9fr) minmax(210px,1.1fr);
+        column-gap:36px;
+      }
+      .weather-summary{column-gap:16px}
+      .metrics{column-gap:22px;row-gap:14px}
       main{padding-top:28px}
     }
 
@@ -234,11 +284,12 @@
 
   <footer>
     <section class="footer-section current">
-      <div id="currentIcon" class="weather-icon" aria-label="Current weather"></div>
-
-      <div>
-        <div id="temperature" class="temp">--°F</div>
-        <div id="condition" class="condition">Weather unavailable</div>
+      <div class="weather-summary">
+        <div id="currentIcon" class="weather-icon" aria-label="Current weather"></div>
+        <div class="weather-copy">
+          <div id="temperature" class="temp">--°F</div>
+          <div id="condition" class="condition">Weather unavailable</div>
+        </div>
       </div>
 
       <div class="metrics">
@@ -292,17 +343,17 @@ const cacheKey='display-weather-v1';
 const alertCacheKey='display-alerts-v1';
 
 const ICONS={
-  sun:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="32" cy="32" r="11"/><path d="M32 7v8M32 49v8M7 32h8M49 32h8M14.3 14.3l5.7 5.7M44 44l5.7 5.7M49.7 14.3L44 20M20 44l-5.7 5.7"/></svg>`,
-  cloud:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 46h30a9 9 0 0 0 0-18 14 14 0 0 0-26-3A10.5 10.5 0 0 0 18 46Z"/></svg>`,
-  partly:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="23" r="8"/><path d="M24 7v5M8 23h5M12.7 11.7l3.6 3.6M35.3 11.7l-3.6 3.6"/><path d="M19 49h31a8 8 0 0 0 0-16 12 12 0 0 0-23-2A9 9 0 0 0 19 49Z"/></svg>`,
-  rain:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 39h31a9 9 0 0 0 0-18 14 14 0 0 0-26-3A10.5 10.5 0 0 0 17 39Z"/><path d="M23 48l-3 6M35 48l-3 6M47 48l-3 6"/></svg>`,
-  snow:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 38h31a9 9 0 0 0 0-18 14 14 0 0 0-26-3A10.5 10.5 0 0 0 17 38Z"/><path d="M23 48v8M19.5 50l7 4M26.5 50l-7 4M42 48v8M38.5 50l7 4M45.5 50l-7 4"/></svg>`,
-  storm:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 38h31a9 9 0 0 0 0-18 14 14 0 0 0-26-3A10.5 10.5 0 0 0 17 38Z"/><path d="M35 42l-7 10h7l-4 8 12-13h-7l4-5Z"/></svg>`,
-  fog:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M17 36h31a9 9 0 0 0 0-18 14 14 0 0 0-26-3A10.5 10.5 0 0 0 17 36Z"/><path d="M12 46h40M17 54h30"/></svg>`,
-  wind:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16M3 16h10a3 3 0 1 1-3 3"/></svg>`,
-  humidity:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z"/></svg>`,
-  sunrise:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 18h16M6 15a6 6 0 0 1 12 0M12 3v4M4.9 7.9l2.8 2.8M19.1 7.9l-2.8 2.8"/></svg>`,
-  sunset:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 18h16M6 15a6 6 0 0 1 12 0M12 7V3M9 5l3-3 3 3"/></svg>`
+  sun:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.42"/></svg>`,
+  cloud:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`,
+  partly:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v2M4.93 4.93l1.42 1.42M2 12h2M19.07 4.93l-1.41 1.42"/><path d="M12 8a4 4 0 0 0-3.78 2.7"/><path d="M17.5 21H9a6 6 0 1 1 5.78-7.6h2.72a3.8 3.8 0 1 1 0 7.6Z"/></svg>`,
+  rain:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 17H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="m8 20-1 2M13 20l-1 2M18 20l-1 2"/></svg>`,
+  snow:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 16H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M8 20h.01M12 19h.01M16 20h.01"/></svg>`,
+  storm:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 16H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="m13 16-3 5h4l-2 3"/></svg>`,
+  fog:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 14H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M4 18h16M7 22h10"/></svg>`,
+  wind:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h12.5a3.5 3.5 0 1 0-3.5-3.5M3 12h17M3 16h11a3 3 0 1 1-3 3"/></svg>`,
+  humidity:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.7 6.6 9a8 8 0 1 0 10.8 0L12 2.7Z"/></svg>`,
+  sunrise:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v8M8 6l4-4 4 4M4 18h16M6 15a6 6 0 0 1 12 0"/></svg>`,
+  sunset:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10V2M8 6l4 4 4-4M4 18h16M6 15a6 6 0 0 1 12 0"/></svg>`
 };
 
 function weatherIcon(description=''){

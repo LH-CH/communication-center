@@ -19,3 +19,6 @@ Weather icons are embedded as lightweight inline SVG graphics. No external icon 
 
 ## Updating the display
 Edit `config.json` in GitHub and commit the change. The open display checks for updates automatically.
+
+
+The current-conditions area uses a compact weather summary and aligned 2×2 metrics grid with embedded minimal SVG icons.
