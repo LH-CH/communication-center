@@ -263,6 +263,7 @@ let loadedNoticesSnapshot='[]';
 let noticesDirty=false;
 let locationSearchTimer=null;
 let selectedLocation=null;
+let localLocations=[];
 const noticeBackupKey='displayAdminNoticeBackupV1';
 
 const enc=s=>btoa(unescape(encodeURIComponent(s)));
@@ -422,74 +423,152 @@ function setSelectedLocation(location){
   }
 }
 
+async function loadLocalLocations(){
+  try{
+    const response=await fetch(`locations.json?v=${Date.now()}`,{cache:'no-store'});
+    if(!response.ok)throw new Error(response.status);
+    const data=await response.json();
+    localLocations=Array.isArray(data)?data:[];
+  }catch(error){
+    console.warn('Local locations list unavailable',error);
+    localLocations=[];
+  }
+}
+
+function localLocationMatches(query){
+  const q=query.trim().toLowerCase();
+  if(q.length<2)return[];
+
+  return localLocations
+    .filter(item=>{
+      const haystack=[
+        item.label,
+        item.city,
+        item.state,
+        item.zip
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(q);
+    })
+    .slice(0,8)
+    .map(item=>({
+      label:item.label||[item.city,item.state].filter(Boolean).join(', '),
+      latitude:Number(item.latitude),
+      longitude:Number(item.longitude),
+      timeZone:item.timeZone||'',
+      detail:[item.zip,item.timeZone].filter(Boolean).join(' · '),
+      source:'saved'
+    }));
+}
+
+function renderLocationOptions(items,messageText='Select the correct location.'){
+  const results=$('locationResults');
+  const message=$('locationMessage');
+  results.innerHTML='';
+
+  if(!items.length){
+    results.classList.remove('open');
+    message.textContent=messageText;
+    return;
+  }
+
+  items.forEach(item=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='location-option';
+    button.innerHTML=`<strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.detail||item.timeZone||'')}</span>`;
+
+    button.addEventListener('click',()=>{
+      setSelectedLocation({
+        label:item.label,
+        latitude:item.latitude,
+        longitude:item.longitude,
+        timeZone:item.timeZone
+      });
+      results.classList.remove('open');
+      results.innerHTML='';
+      message.textContent='Location selected.';
+    });
+
+    results.appendChild(button);
+  });
+
+  results.classList.add('open');
+  message.textContent=messageText;
+}
+
 async function searchLocations(query){
   const results=$('locationResults');
   const message=$('locationMessage');
+  const trimmed=query.trim();
 
-  if(query.trim().length<2){
+  if(trimmed.length<2){
     results.classList.remove('open');
     results.innerHTML='';
     message.textContent='';
     return;
   }
 
-  message.textContent='Searching…';
+  const localMatches=localLocationMatches(trimmed);
+
+  // Show saved/local matches immediately without waiting on an external service.
+  if(localMatches.length){
+    renderLocationOptions(localMatches,'Saved location matches shown. Checking for more…');
+  }else{
+    message.textContent='Searching…';
+  }
 
   try{
     const url=new URL('https://geocoding-api.open-meteo.com/v1/search');
-    url.searchParams.set('name',query.trim());
+    url.searchParams.set('name',trimmed);
     url.searchParams.set('count','8');
     url.searchParams.set('language','en');
     url.searchParams.set('format','json');
 
-    const response=await fetch(url,{cache:'no-store'});
+    const response=await fetch(url,{
+      cache:'no-store',
+      mode:'cors',
+      headers:{Accept:'application/json'}
+    });
+
     if(!response.ok)throw new Error(`${response.status} ${response.statusText}`);
 
     const data=await response.json();
-    const items=Array.isArray(data.results)?data.results:[];
+    const remoteItems=(Array.isArray(data.results)?data.results:[]).map(item=>({
+      label:formatLocationResult(item),
+      latitude:Number(item.latitude),
+      longitude:Number(item.longitude),
+      timeZone:item.timezone||'',
+      detail:[item.admin2,item.postcodes?.[0],item.timezone].filter(Boolean).join(' · '),
+      source:'online'
+    }));
 
-    results.innerHTML='';
+    const merged=[...localMatches];
 
-    if(!items.length){
-      results.classList.remove('open');
-      message.textContent='No matching locations found.';
-      return;
-    }
-
-    items.forEach(item=>{
-      const button=document.createElement('button');
-      button.type='button';
-      button.className='location-option';
-
-      const label=formatLocationResult(item);
-      const detail=[
-        item.admin2,
-        item.postcodes?.[0],
-        item.timezone
-      ].filter(Boolean).join(' · ');
-
-      button.innerHTML=`<strong>${escapeHtml(label)}</strong><span>${escapeHtml(detail)}</span>`;
-      button.addEventListener('click',()=>{
-        setSelectedLocation({
-          label,
-          latitude:item.latitude,
-          longitude:item.longitude,
-          timeZone:item.timezone
-        });
-        results.classList.remove('open');
-        results.innerHTML='';
-        message.textContent='Location selected.';
-      });
-
-      results.appendChild(button);
+    remoteItems.forEach(item=>{
+      const duplicate=merged.some(existing=>
+        Math.abs(existing.latitude-item.latitude)<0.01 &&
+        Math.abs(existing.longitude-item.longitude)<0.01
+      );
+      if(!duplicate)merged.push(item);
     });
 
-    results.classList.add('open');
-    message.textContent='Select the correct location.';
+    renderLocationOptions(
+      merged.slice(0,10),
+      merged.length?'Select the correct location.':'No matching locations found.'
+    );
   }catch(error){
-    console.error('Location search failed',error);
-    results.classList.remove('open');
-    message.textContent='Location search is temporarily unavailable.';
+    console.warn('Online location search unavailable',error);
+
+    if(localMatches.length){
+      renderLocationOptions(
+        localMatches,
+        'Online search is unavailable. Showing saved location matches.'
+      );
+    }else{
+      results.classList.remove('open');
+      results.innerHTML='';
+      message.textContent='Online search is unavailable and no saved location matches were found.';
+    }
   }
 }
 
@@ -764,6 +843,7 @@ $('setupBtn').addEventListener('click',()=>$('setupModal').classList.add('open')
 $('closeModal').addEventListener('click',()=>$('setupModal').classList.remove('open'));
 $('setupModal').addEventListener('click',e=>{if(e.target===$('setupModal'))$('setupModal').classList.remove('open')});
 
+loadLocalLocations();
 $('token').value=sessionStorage.getItem('displayAdminToken')||'';
 if(!$('token').value)$('setupModal').classList.add('open');
 </script>

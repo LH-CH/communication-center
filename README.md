@@ -108,3 +108,13 @@ Start typing a city or ZIP code and select a result. The application stores the 
 - Time zone
 
 Latitude, longitude, and time zone are no longer shown as editable fields. They remain stored internally in `config.json` for NWS weather, sunrise, sunset, and clock calculations.
+
+
+## Location search fallback
+
+Location search now uses two sources:
+
+1. `locations.json` for immediate saved-location matches
+2. Open-Meteo geocoding for broader online search
+
+If the online service is unavailable, saved locations still work. Kalispell and several nearby Montana communities are included by default. Add additional locations to `locations.json` using the same fields.
