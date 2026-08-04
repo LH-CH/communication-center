@@ -14,22 +14,10 @@
   "noticeRotationSeconds": 10,
   "notices": [
     {
-      "message": "Test 1",
-      "start": "2026-08-04T22:08:00.000Z",
-      "expires": "2026-08-04T23:08:00.000Z",
+      "message": "",
+      "start": "",
+      "expires": "",
       "priority": "normal"
-    },
-    {
-      "message": "Test 2",
-      "priority": "important",
-      "start": "2026-08-04T22:08:00.000Z",
-      "expires": "2026-08-04T23:08:00.000Z"
-    },
-    {
-      "message": "Test 3",
-      "priority": "urgent",
-      "start": "2026-08-04T22:08:00.000Z",
-      "expires": "2026-08-04T23:08:00.000Z"
     }
   ],
   "dynamicBackground": true,

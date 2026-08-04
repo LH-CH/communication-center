@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#020916;
@@ -31,7 +28,7 @@
       --sky-top:#020916;
       --sky-bottom:#020b18;
       --sky-glow:rgba(101,199,247,.035);
-      font-family:"Inter","Segoe UI",Arial,sans-serif;
+      font-family:Segoe UI,Arial,sans-serif;
       color:var(--text);
       background:
         radial-gradient(circle at 15% 10%,var(--sky-glow),transparent 30%),
@@ -87,30 +84,9 @@
     .clock-panel,.video-panel{min-width:0;min-height:0}
     .clock-panel{display:flex;align-items:center;justify-content:center}
     .clock-wrap{width:100%;padding-inline:clamp(6px,1.6vw,28px)}
-    .time-row{
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      white-space:nowrap;
-      line-height:.84;
-      column-gap:0;
-      min-width:0;
-    }
-    #time{
-      font-size:clamp(104px,18.7vw,360px);
-      font-weight:620;
-      letter-spacing:.015em;
-      font-variant-numeric:tabular-nums;
-      font-feature-settings:"tnum" 1;
-    }
-    #seconds{
-      font-size:clamp(27px,3.7vw,72px);
-      font-weight:500;
-      color:var(--muted);
-      margin:.08em 0 0 .28em;
-      font-variant-numeric:tabular-nums;
-      font-feature-settings:"tnum" 1;
-    }
+    .time-row{display:flex;align-items:flex-start;justify-content:center;white-space:nowrap;line-height:.84}
+    #time{font-size:clamp(104px,18.7vw,360px);font-weight:620;letter-spacing:-.065em}
+    #seconds{font-size:clamp(27px,3.7vw,72px);font-weight:500;color:var(--muted);margin:.08em 0 0 .22em}
     #date{
       margin-top:clamp(22px,3vh,40px);
       font-size:clamp(19px,1.65vw,32px);
@@ -237,23 +213,83 @@
 
     .notice{
       width:100%;
-      min-height:68px;
+      height:clamp(112px,13vh,150px);
       border:1px solid rgba(159,185,211,.14);
       border-radius:var(--radius);
-      padding:clamp(12px,1vw,18px);
+      position:relative;
+      overflow:hidden;
+      background:rgba(6,18,34,.22);
+      -webkit-mask-image:linear-gradient(
+        to bottom,
+        transparent 0%,
+        #000 17%,
+        #000 83%,
+        transparent 100%
+      );
+      mask-image:linear-gradient(
+        to bottom,
+        transparent 0%,
+        #000 17%,
+        #000 83%,
+        transparent 100%
+      );
+    }
+
+    .notice-track{
+      position:absolute;
+      left:0;
+      right:0;
+      top:50%;
+      display:flex;
+      flex-direction:column;
+      gap:clamp(8px,.7vw,12px);
+      padding:0 clamp(22px,2vw,36px);
+      transform:translateY(var(--notice-offset,-50%));
+      transition:transform 700ms cubic-bezier(.22,.61,.36,1);
+      will-change:transform;
+    }
+
+    .notice-item{
+      flex:0 0 auto;
+      min-height:clamp(46px,5.3vh,62px);
       display:flex;
       align-items:center;
       justify-content:center;
-      position:relative;
+      padding:10px clamp(20px,2vw,34px);
+      border-left:3px solid transparent;
+      border-radius:7px;
+      color:rgba(244,247,251,.46);
       text-align:center;
-      font-size:clamp(15px,1.05vw,21px);
-      line-height:1.35;
-      background:rgba(6,18,34,.22);
+      font-size:clamp(14px,.95vw,19px);
+      line-height:1.3;
+      opacity:.42;
+      transform:scale(.965);
+      transition:
+        opacity 700ms ease,
+        transform 700ms ease,
+        color 700ms ease,
+        background-color 700ms ease;
     }
 
-    .notice.important{border-left:3px solid var(--warn)}
-    .notice.urgent{border-left:3px solid var(--danger)}
-    .notice-count{position:absolute;right:10px;bottom:7px;color:var(--muted);font-size:11px}
+    .notice-item.active{
+      color:var(--text);
+      opacity:1;
+      transform:scale(1);
+      background:rgba(8,24,41,.54);
+    }
+
+    .notice-item.important{border-left-color:var(--warn)}
+    .notice-item.urgent{border-left-color:var(--danger)}
+
+    .notice-count{
+      position:absolute;
+      right:10px;
+      bottom:7px;
+      z-index:3;
+      color:var(--muted);
+      font-size:11px;
+      pointer-events:none;
+    }
 
     .alerts{width:100%;padding-left:clamp(6px,.8vw,14px)}
     .alert-title{font-size:clamp(15px,1.1vw,22px);font-weight:600}
@@ -284,7 +320,7 @@
 
     @media(prefers-reduced-motion:reduce){
       *{animation:none!important;transition:none!important}
-      .notice-track{transition:none!important}
+      .notice-track,.notice-item{transition:none!important}
     }
   </style>
 </head>
@@ -342,7 +378,7 @@
     </section>
 
     <section class="footer-section">
-      <div id="notice" class="notice"><div id="noticeTrack" class="notice-track"><div class="notice-slide">No active department notices</div></div><span id="noticeCount" class="notice-count"></span></div>
+      <div id="notice" class="notice"><div id="noticeTrack" class="notice-track"></div><span id="noticeCount" class="notice-count"></span></div>
     </section>
 
     <section class="footer-section">
@@ -469,44 +505,75 @@ function escapeHtml(s){
   return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
-function renderNoticeList(){
+function renderNoticeStack(){
   const list=activeNotices();
   const track=$('noticeTrack');
   const count=$('noticeCount');
 
   if(!list.length){
-    track.innerHTML='<div class="notice-slide">No active department notices</div>';
-    track.style.transform='translateY(0)';
-    count.textContent='';
+    track.innerHTML='<div class="notice-item active">No active department notices</div>';
     activeNoticeIndex=0;
+    requestAnimationFrame(()=>positionNoticeStack(false));
+    count.textContent='';
     return;
   }
 
-  track.innerHTML=list.map(n=>
-    `<div class="notice-slide ${escapeHtml(n.priority||'normal')}"><span>${escapeHtml(n.message)}</span></div>`
+  track.innerHTML=list.map((n,i)=>
+    `<div class="notice-item ${escapeHtml(n.priority||'normal')} ${i===activeNoticeIndex?'active':''}" data-index="${i}">
+      <span>${escapeHtml(n.message)}</span>
+    </div>`
   ).join('');
 
-  activeNoticeIndex=Math.min(activeNoticeIndex,list.length-1);
-  track.style.transform=`translateY(-${activeNoticeIndex*100}%)`;
+  requestAnimationFrame(()=>positionNoticeStack(false));
   count.textContent=list.length>1?`${activeNoticeIndex+1} of ${list.length}`:'';
+}
+
+function positionNoticeStack(animate=true){
+  const track=$('noticeTrack');
+  const items=[...track.querySelectorAll('.notice-item')];
+  if(!items.length)return;
+
+  activeNoticeIndex=Math.max(0,Math.min(activeNoticeIndex,items.length-1));
+  const active=items[activeNoticeIndex];
+
+  items.forEach((item,i)=>item.classList.toggle('active',i===activeNoticeIndex));
+
+  if(!animate)track.style.transition='none';
+
+  const offset=-(active.offsetTop+active.offsetHeight/2);
+  track.style.setProperty('--notice-offset',`${offset}px`);
+
+  if(!animate){
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>track.style.transition='');
+    });
+  }
 }
 
 function advanceNotice(){
   const list=activeNotices();
+
   if(!list.length){
-    renderNoticeList();
+    renderNoticeStack();
     return;
   }
 
   activeNoticeIndex=(activeNoticeIndex+1)%list.length;
-  $('noticeTrack').style.transform=`translateY(-${activeNoticeIndex*100}%)`;
+
+  // Re-render if the active set changed because a notice started or expired.
+  if($('noticeTrack').children.length!==list.length){
+    renderNoticeStack();
+    return;
+  }
+
+  positionNoticeStack(true);
   $('noticeCount').textContent=list.length>1?`${activeNoticeIndex+1} of ${list.length}`:'';
 }
 
 function startNoticeRotation(){
   clearInterval(noticeTimer);
   activeNoticeIndex=0;
-  renderNoticeList();
+  renderNoticeStack();
 
   const seconds=Math.max(3,Number(CONFIG.noticeRotationSeconds)||10);
   noticeTimer=setInterval(advanceNotice,seconds*1000);
@@ -793,6 +860,10 @@ function updateDynamicBackground(force=false){
   const glow=mixColor(from.glow,to.glow,t);
   document.body.style.setProperty('--sky-glow',glow.replace('rgb(','rgba(').replace(')',',.16)'));
 }
+
+window.addEventListener('resize',()=>{
+  requestAnimationFrame(()=>positionNoticeStack(false));
+});
 
 function init(){
   const wc=localStorage.getItem(cacheKey),ac=localStorage.getItem(alertCacheKey);

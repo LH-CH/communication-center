@@ -39,9 +39,25 @@ The interval is controlled in `config.json`:
 The transition is a smooth vertical slide. Set the value to the number of seconds each notice should remain visible.
 
 
-## Clock typography update
+## Notice preservation fix
 
-- Uses Inter with Segoe UI and Arial fallbacks
-- Uses tabular numerals for consistent digit widths
-- Adds slight positive clock letter spacing
-- Adds more separation between the minutes and seconds
+The admin page now:
+
+- Never writes or deletes notices when loading
+- Preserves the latest notices from GitHub unless the Notice Manager was intentionally edited
+- Re-fetches the latest `config.json` before saving
+- Merges changes against the newest GitHub version
+- Warns before discarding unsaved notice edits
+
+
+## Stacked scrolling notices
+
+Active notices are shown as a vertical stack. The current notice is centered at full opacity. The notices immediately above and below remain visible but fade toward the panel edges.
+
+The stack advances automatically using:
+
+```json
+"noticeRotationSeconds": 10
+```
+
+The panel loops through all active notices and keeps the counter synchronized.

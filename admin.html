@@ -126,7 +126,7 @@ ol{color:#cbd7e2;line-height:1.55}
       <h2 style="margin:0">Notice Manager</h2>
       <button id="addNoticeBtn" class="primary">+ New notice</button>
     </div>
-    <div class="help" style="margin-bottom:14px">Notices appear only during their scheduled window. Leave both dates blank to display a notice immediately until it is removed.</div>
+    <div class="help" style="margin-bottom:14px">Notices appear only during their scheduled window. Loading the admin page never deletes notices. Existing notices are preserved on save unless you intentionally edit or remove them here.</div>
     <div id="noticeList" class="notice-list"></div>
   </section>
 </div>
@@ -160,6 +160,8 @@ const $=id=>document.getElementById(id);
 let currentSha='';
 let currentConfig={};
 let notices=[];
+let loadedNoticesSnapshot='[]';
+let noticesDirty=false;
 
 const enc=s=>btoa(unescape(encodeURIComponent(s)));
 const dec=s=>decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
@@ -252,8 +254,10 @@ function syncNoticeInputs(){
 }
 
 function fillForm(c){
-  currentConfig=c;
-  notices=Array.isArray(c.notices)?structuredClone(c.notices):[];
+  currentConfig={...c};
+  notices=Array.isArray(c.notices)?JSON.parse(JSON.stringify(c.notices)):[];
+  loadedNoticesSnapshot=JSON.stringify(notices);
+  noticesDirty=false;
   $('locationLabel').value=c.location?.label||'';
   $('latitude').value=c.location?.latitude??'';
   $('longitude').value=c.location?.longitude??'';
@@ -307,27 +311,54 @@ async function loadConfig(){
   }
 }
 
+async function fetchLatestConfig(){
+  const r=await fetch(apiUrl(),{headers:headers(),cache:'no-store'});
+  if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
+  const data=await r.json();
+  return {
+    sha:data.sha,
+    config:JSON.parse(dec(data.content))
+  };
+}
+
 async function saveConfig(){
   if(!currentSha){
     alert('Load the current configuration before saving.');
     return;
   }
+
   const token=$('token').value.trim();
   if(!token){
     alert('A GitHub token is required to save.');
     return;
   }
 
-  const config=buildConfig();
-  const owner=$('owner').value.trim();
-  const repo=$('repo').value.trim();
-  const path=$('path').value.trim();
-  const branch=$('branch').value.trim();
-  const url=`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
-
-  setStatus('Saving…');
+  setStatus('Checking latest version…');
   $('saveBtn').disabled=true;
+
   try{
+    const latest=await fetchLatestConfig();
+
+    // Preserve the latest GitHub notices unless the notice manager was actually edited.
+    if(!noticesDirty){
+      notices=Array.isArray(latest.config.notices)
+        ? JSON.parse(JSON.stringify(latest.config.notices))
+        : [];
+    }
+
+    // Merge against the latest config so unrelated settings or notices are not overwritten.
+    currentConfig={...latest.config,...currentConfig};
+    currentSha=latest.sha;
+
+    const config=buildConfig();
+    const owner=$('owner').value.trim();
+    const repo=$('repo').value.trim();
+    const path=$('path').value.trim();
+    const branch=$('branch').value.trim();
+    const url=`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+
+    setStatus('Saving…');
+
     const r=await fetch(url,{
       method:'PUT',
       headers:{...headers(),'Content-Type':'application/json'},
@@ -338,12 +369,16 @@ async function saveConfig(){
         branch
       })
     });
+
     if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
+
     const data=await r.json();
     currentSha=data.content.sha;
     currentConfig=config;
+    loadedNoticesSnapshot=JSON.stringify(config.notices||[]);
+    noticesDirty=false;
     setStatus('Saved','ok');
-    alert('Saved to GitHub. GitHub Pages typically publishes the change within one to two minutes.');
+    alert('Saved to GitHub. Existing notices were preserved unless you intentionally edited them.');
   }catch(e){
     console.error(e);
     setStatus('Save failed','err');
@@ -356,8 +391,17 @@ async function saveConfig(){
 $('addNoticeBtn').addEventListener('click',()=>{
   syncNoticeInputs();
   notices.push({message:'',priority:'normal',start:'',expires:''});
+  noticesDirty=true;
   renderNotices();
   setTimeout(()=>document.querySelectorAll('textarea')[document.querySelectorAll('textarea').length-1]?.focus(),0);
+});
+
+$('noticeList').addEventListener('input',()=>{
+  noticesDirty=true;
+});
+
+$('noticeList').addEventListener('change',()=>{
+  noticesDirty=true;
 });
 
 $('noticeList').addEventListener('click',e=>{
@@ -365,10 +409,14 @@ $('noticeList').addEventListener('click',e=>{
   if(!b)return;
   syncNoticeInputs();
   notices.splice(Number(b.dataset.remove),1);
+  noticesDirty=true;
   renderNotices();
 });
 
-$('loadBtn').addEventListener('click',loadConfig);
+$('loadBtn').addEventListener('click',()=>{
+  if(noticesDirty&&!confirm('Reload from GitHub and discard unsaved notice changes?'))return;
+  loadConfig();
+});
 $('saveBtn').addEventListener('click',saveConfig);
 $('previewBtn').addEventListener('click',()=>alert(JSON.stringify(buildConfig(),null,2)));
 $('forgetBtn').addEventListener('click',()=>{sessionStorage.removeItem('displayAdminToken');$('token').value='';setStatus('Token cleared')});
