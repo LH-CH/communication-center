@@ -61,3 +61,27 @@ The stack advances automatically using:
 ```
 
 The panel loops through all active notices and keeps the counter synchronized.
+
+
+## Safe notice loading
+
+The admin page now prevents an empty GitHub notice list from silently clearing notices.
+
+It also:
+
+- Saves an automatic local notice backup in the admin browser
+- Requires confirmation before replacing existing notices with an empty remote list
+- Includes a **Restore notices** button
+- Updates the backup while notices are typed, scheduled, added, removed, or saved
+
+
+## Notice expiration display
+
+When an active notice has an expiration time, the display shows a subtle label in the lower-left corner of the notice panel.
+
+Examples:
+
+- `Expires 18:30`
+- `Expires Aug 5 · 08:00`
+
+Notices without an expiration remain visually unchanged.

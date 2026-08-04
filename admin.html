@@ -77,6 +77,7 @@ ol{color:#cbd7e2;line-height:1.55}
   <div class="actions">
     <span id="connectionStatus" class="status">Not connected</span>
     <button id="setupBtn">Setup</button>
+    <button id="restoreBtn">Restore notices</button>
     <button id="loadBtn">Load</button>
   </div>
 </header>
@@ -126,7 +127,7 @@ ol{color:#cbd7e2;line-height:1.55}
       <h2 style="margin:0">Notice Manager</h2>
       <button id="addNoticeBtn" class="primary">+ New notice</button>
     </div>
-    <div class="help" style="margin-bottom:14px">Notices appear only during their scheduled window. Loading the admin page never deletes notices. Existing notices are preserved on save unless you intentionally edit or remove them here.</div>
+    <div class="help" style="margin-bottom:14px">Notices are backed up in this browser while you edit. Loading an empty GitHub notice list will require confirmation, and the Restore notices button can recover the latest local backup.</div>
     <div id="noticeList" class="notice-list"></div>
   </section>
 </div>
@@ -162,6 +163,7 @@ let currentConfig={};
 let notices=[];
 let loadedNoticesSnapshot='[]';
 let noticesDirty=false;
+const noticeBackupKey='displayAdminNoticeBackupV1';
 
 const enc=s=>btoa(unescape(encodeURIComponent(s)));
 const dec=s=>decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
@@ -253,11 +255,54 @@ function syncNoticeInputs(){
   });
 }
 
-function fillForm(c){
+function saveNoticeBackup(list){
+  try{
+    localStorage.setItem(noticeBackupKey,JSON.stringify({
+      savedAt:new Date().toISOString(),
+      notices:Array.isArray(list)?list:[]
+    }));
+  }catch(e){
+    console.warn('Unable to save notice backup',e);
+  }
+}
+
+function getNoticeBackup(){
+  try{
+    const value=JSON.parse(localStorage.getItem(noticeBackupKey)||'null');
+    return Array.isArray(value?.notices)?value:null;
+  }catch{
+    return null;
+  }
+}
+
+function normalizeNotices(value){
+  return Array.isArray(value)
+    ? value.filter(n=>n&&typeof n==='object')
+    : [];
+}
+
+function fillForm(c,{allowEmptyNotices=false}={}){
   currentConfig={...c};
-  notices=Array.isArray(c.notices)?JSON.parse(JSON.stringify(c.notices)):[];
+
+  const remoteNotices=normalizeNotices(c.notices);
+  const currentNotices=normalizeNotices(notices);
+  const backup=getNoticeBackup();
+  let nextNotices=remoteNotices;
+
+  if(remoteNotices.length===0&&!allowEmptyNotices){
+    if(currentNotices.length>0){
+      nextNotices=currentNotices;
+    }else if(backup?.notices?.length){
+      nextNotices=backup.notices;
+    }
+  }
+
+  notices=JSON.parse(JSON.stringify(nextNotices));
   loadedNoticesSnapshot=JSON.stringify(notices);
   noticesDirty=false;
+
+  if(notices.length)saveNoticeBackup(notices);
+
   $('locationLabel').value=c.location?.label||'';
   $('latitude').value=c.location?.latitude??'';
   $('longitude').value=c.location?.longitude??'';
@@ -297,12 +342,32 @@ async function loadConfig(){
   const token=$('token').value.trim();
   if(token)sessionStorage.setItem('displayAdminToken',token);
   setStatus('Loading…');
+
   try{
     const r=await fetch(apiUrl(),{headers:headers(),cache:'no-store'});
     if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
+
     const data=await r.json();
+    const loadedConfig=JSON.parse(dec(data.content));
+    const remoteNotices=normalizeNotices(loadedConfig.notices);
+    const existingNotices=normalizeNotices(notices);
+    const backup=getNoticeBackup();
+
+    let allowEmptyNotices=false;
+
+    if(remoteNotices.length===0&&(existingNotices.length>0||backup?.notices?.length)){
+      const preservedCount=existingNotices.length||backup.notices.length;
+      const replace=confirm(
+        `The GitHub configuration currently contains no notices.\n\n`+
+        `${preservedCount} notice(s) are available in the admin page or local backup.\n\n`+
+        `Press OK to load the empty GitHub notice list and clear the editor.\n`+
+        `Press Cancel to preserve the existing notices.`
+      );
+      allowEmptyNotices=replace;
+    }
+
     currentSha=data.sha;
-    fillForm(JSON.parse(dec(data.content)));
+    fillForm(loadedConfig,{allowEmptyNotices});
     setStatus('Connected','ok');
   }catch(e){
     console.error(e);
@@ -377,6 +442,7 @@ async function saveConfig(){
     currentConfig=config;
     loadedNoticesSnapshot=JSON.stringify(config.notices||[]);
     noticesDirty=false;
+    saveNoticeBackup(config.notices||[]);
     setStatus('Saved','ok');
     alert('Saved to GitHub. Existing notices were preserved unless you intentionally edited them.');
   }catch(e){
@@ -392,16 +458,21 @@ $('addNoticeBtn').addEventListener('click',()=>{
   syncNoticeInputs();
   notices.push({message:'',priority:'normal',start:'',expires:''});
   noticesDirty=true;
+  saveNoticeBackup(notices);
   renderNotices();
   setTimeout(()=>document.querySelectorAll('textarea')[document.querySelectorAll('textarea').length-1]?.focus(),0);
 });
 
 $('noticeList').addEventListener('input',()=>{
+  syncNoticeInputs();
   noticesDirty=true;
+  saveNoticeBackup(notices);
 });
 
 $('noticeList').addEventListener('change',()=>{
+  syncNoticeInputs();
   noticesDirty=true;
+  saveNoticeBackup(notices);
 });
 
 $('noticeList').addEventListener('click',e=>{
@@ -410,11 +481,27 @@ $('noticeList').addEventListener('click',e=>{
   syncNoticeInputs();
   notices.splice(Number(b.dataset.remove),1);
   noticesDirty=true;
+  saveNoticeBackup(notices);
   renderNotices();
 });
 
+$('restoreBtn').addEventListener('click',()=>{
+  const backup=getNoticeBackup();
+  if(!backup?.notices?.length){
+    alert('No local notice backup is available in this browser.');
+    return;
+  }
+
+  if(!confirm(`Restore ${backup.notices.length} notice(s) saved on ${new Date(backup.savedAt).toLocaleString()}?`))return;
+
+  notices=JSON.parse(JSON.stringify(backup.notices));
+  noticesDirty=true;
+  renderNotices();
+  setStatus('Notices restored','ok');
+});
+
 $('loadBtn').addEventListener('click',()=>{
-  if(noticesDirty&&!confirm('Reload from GitHub and discard unsaved notice changes?'))return;
+  if(noticesDirty&&!confirm('Reload settings from GitHub? Unsaved settings may be replaced, but notice backups will remain available.'))return;
   loadConfig();
 });
 $('saveBtn').addEventListener('click',saveConfig);

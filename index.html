@@ -291,6 +291,18 @@
       pointer-events:none;
     }
 
+    .notice-expiration{
+      position:absolute;
+      left:12px;
+      bottom:7px;
+      z-index:3;
+      color:rgba(159,176,194,.72);
+      font-size:clamp(10px,.68vw,12px);
+      letter-spacing:.01em;
+      pointer-events:none;
+      white-space:nowrap;
+    }
+
     .alerts{width:100%;padding-left:clamp(6px,.8vw,14px)}
     .alert-title{font-size:clamp(15px,1.1vw,22px);font-weight:600}
     .alert-detail{
@@ -378,7 +390,7 @@
     </section>
 
     <section class="footer-section">
-      <div id="notice" class="notice"><div id="noticeTrack" class="notice-track"></div><span id="noticeCount" class="notice-count"></span></div>
+      <div id="notice" class="notice"><div id="noticeTrack" class="notice-track"></div><span id="noticeExpiration" class="notice-expiration"></span><span id="noticeCount" class="notice-count"></span></div>
     </section>
 
     <section class="footer-section">
@@ -505,10 +517,51 @@ function escapeHtml(s){
   return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
+function formatNoticeExpiration(value){
+  if(!value)return'';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return'';
+
+  const tz=CONFIG.timeZone||'America/Denver';
+  const now=new Date();
+
+  const datePart=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,
+    month:'short',
+    day:'numeric'
+  }).format(date);
+
+  const timePart=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,
+    hour:'2-digit',
+    minute:'2-digit',
+    hourCycle:'h23'
+  }).format(date);
+
+  const todayPart=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  }).format(now);
+
+  const expDayPart=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  }).format(date);
+
+  return todayPart===expDayPart
+    ? `Expires ${timePart}`
+    : `Expires ${datePart} · ${timePart}`;
+}
+
 function renderNoticeStack(){
   const list=activeNotices();
   const track=$('noticeTrack');
   const count=$('noticeCount');
+  const expiration=$('noticeExpiration');
 
   if(!list.length){
     track.innerHTML='<div class="notice-item active">No active department notices</div>';
@@ -526,6 +579,7 @@ function renderNoticeStack(){
 
   requestAnimationFrame(()=>positionNoticeStack(false));
   count.textContent=list.length>1?`${activeNoticeIndex+1} of ${list.length}`:'';
+  expiration.textContent=formatNoticeExpiration(list[activeNoticeIndex]?.expires);
 }
 
 function positionNoticeStack(animate=true){
@@ -568,6 +622,7 @@ function advanceNotice(){
 
   positionNoticeStack(true);
   $('noticeCount').textContent=list.length>1?`${activeNoticeIndex+1} of ${list.length}`:'';
+  $('noticeExpiration').textContent=formatNoticeExpiration(list[activeNoticeIndex]?.expires);
 }
 
 function startNoticeRotation(){
