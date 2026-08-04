@@ -26,7 +26,87 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(520px,1.65fr);gap:24px}
 .panel{background:rgba(7,19,34,.72);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
 .panel h2{font-size:17px;margin:0 0 17px}
+.section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.section-head h2{
+  margin:0;
+}
+.section-toggle{
+  width:30px;
+  height:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  border-radius:7px;
+  font-size:20px;
+  line-height:1;
+}
+.collapsible{
+  overflow:hidden;
+  max-height:1000px;
+  opacity:1;
+  transition:max-height .25s ease,opacity .2s ease,margin .25s ease;
+}
+.collapsible.collapsed{
+  max-height:0;
+  opacity:0;
+  margin:0;
+  pointer-events:none;
+}
+
 .field{margin-bottom:14px}
+.location-search{position:relative}
+.location-results{
+  position:absolute;
+  left:0;
+  right:0;
+  top:calc(100% + 5px);
+  z-index:30;
+  display:none;
+  max-height:260px;
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#071322;
+  box-shadow:0 14px 30px rgba(0,0,0,.34);
+}
+.location-results.open{display:block}
+.location-option{
+  width:100%;
+  padding:10px 12px;
+  border:0;
+  border-bottom:1px solid rgba(35,54,74,.55);
+  border-radius:0;
+  background:transparent;
+  color:var(--text);
+  text-align:left;
+}
+.location-option:last-child{border-bottom:0}
+.location-option:hover,.location-option:focus{background:#0b1b2d}
+.location-option strong{display:block;font-weight:600}
+.location-option span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.location-selected{
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#06111f;
+}
+.location-selected.visible{display:flex}
+.location-selected .meta{min-width:0}
+.location-selected strong{display:block}
+.location-selected span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.location-message{min-height:18px;color:var(--muted);font-size:12px;margin-top:5px}
+
 label{display:block;color:var(--muted);font-size:12px;font-weight:600;margin-bottom:6px}
 input,textarea,select{
   width:100%;border:1px solid var(--line);border-radius:8px;background:#06111f;
@@ -84,7 +164,11 @@ ol{color:#cbd7e2;line-height:1.55}
 
 <div class="grid">
   <section class="panel">
-    <h2>Repository access</h2>
+    <div class="section-head">
+      <h2>Repository access</h2>
+      <button id="repoToggle" class="section-toggle" type="button" aria-expanded="false" aria-controls="repoSection">+</button>
+    </div>
+    <div id="repoSection" class="collapsible collapsed">
     <div class="repo-box">
       <div class="field"><label>GitHub owner</label><input id="owner" value="LH-CH"></div>
       <div class="field"><label>Repository</label><input id="repo" value="communication-center"></div>
@@ -99,14 +183,28 @@ ol{color:#cbd7e2;line-height:1.55}
       </div>
       <div class="help">The token stays in this browser tab only. It is never written into the website files.</div>
     </div>
+    </div>
 
     <h2 style="margin-top:26px">Display settings</h2>
-    <div class="field"><label>Display location</label><input id="locationLabel"></div>
-    <div class="row">
-      <div class="field"><label>Latitude</label><input id="latitude" type="number" step="any"></div>
-      <div class="field"><label>Longitude</label><input id="longitude" type="number" step="any"></div>
+    <div class="field location-search">
+      <label>Display location</label>
+      <input id="locationSearch" autocomplete="off" placeholder="Start typing a city or ZIP code">
+      <div id="locationResults" class="location-results"></div>
+      <div id="locationMessage" class="location-message"></div>
     </div>
-    <div class="field"><label>Time zone</label><input id="timeZone" placeholder="America/Denver"></div>
+
+    <div id="locationSelected" class="location-selected">
+      <div class="meta">
+        <strong id="selectedLocationLabel">No location selected</strong>
+        <span id="selectedLocationMeta"></span>
+      </div>
+      <button id="changeLocationBtn" type="button" class="small">Change</button>
+    </div>
+
+    <input id="locationLabel" type="hidden">
+    <input id="latitude" type="hidden">
+    <input id="longitude" type="hidden">
+    <input id="timeZone" type="hidden">
     <div class="field"><label>YouTube video URL</label><input id="youtubeUrl"></div>
 
     <div class="toggle"><span>Show video</span><label class="switch"><input id="showVideo" type="checkbox"><span class="slider"></span></label></div>
@@ -163,6 +261,8 @@ let currentConfig={};
 let notices=[];
 let loadedNoticesSnapshot='[]';
 let noticesDirty=false;
+let locationSearchTimer=null;
+let selectedLocation=null;
 const noticeBackupKey='displayAdminNoticeBackupV1';
 
 const enc=s=>btoa(unescape(encodeURIComponent(s)));
@@ -281,6 +381,118 @@ function normalizeNotices(value){
     : [];
 }
 
+function formatLocationResult(item){
+  const parts=[
+    item.name,
+    item.admin1,
+    item.country
+  ].filter(Boolean);
+
+  return [...new Set(parts)].join(', ');
+}
+
+function setSelectedLocation(location){
+  selectedLocation=location?{
+    label:location.label||'',
+    latitude:Number(location.latitude),
+    longitude:Number(location.longitude),
+    timeZone:location.timeZone||location.timezone||''
+  }:null;
+
+  const selected=$('locationSelected');
+  const search=$('locationSearch');
+
+  if(selectedLocation&&Number.isFinite(selectedLocation.latitude)&&Number.isFinite(selectedLocation.longitude)){
+    $('locationLabel').value=selectedLocation.label;
+    $('latitude').value=selectedLocation.latitude;
+    $('longitude').value=selectedLocation.longitude;
+    $('timeZone').value=selectedLocation.timeZone;
+
+    $('selectedLocationLabel').textContent=selectedLocation.label;
+    $('selectedLocationMeta').textContent=selectedLocation.timeZone||'Time zone unavailable';
+    selected.classList.add('visible');
+    search.parentElement.style.display='none';
+  }else{
+    $('locationLabel').value='';
+    $('latitude').value='';
+    $('longitude').value='';
+    $('timeZone').value='';
+    selected.classList.remove('visible');
+    search.parentElement.style.display='';
+  }
+}
+
+async function searchLocations(query){
+  const results=$('locationResults');
+  const message=$('locationMessage');
+
+  if(query.trim().length<2){
+    results.classList.remove('open');
+    results.innerHTML='';
+    message.textContent='';
+    return;
+  }
+
+  message.textContent='Searching…';
+
+  try{
+    const url=new URL('https://geocoding-api.open-meteo.com/v1/search');
+    url.searchParams.set('name',query.trim());
+    url.searchParams.set('count','8');
+    url.searchParams.set('language','en');
+    url.searchParams.set('format','json');
+
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok)throw new Error(`${response.status} ${response.statusText}`);
+
+    const data=await response.json();
+    const items=Array.isArray(data.results)?data.results:[];
+
+    results.innerHTML='';
+
+    if(!items.length){
+      results.classList.remove('open');
+      message.textContent='No matching locations found.';
+      return;
+    }
+
+    items.forEach(item=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='location-option';
+
+      const label=formatLocationResult(item);
+      const detail=[
+        item.admin2,
+        item.postcodes?.[0],
+        item.timezone
+      ].filter(Boolean).join(' · ');
+
+      button.innerHTML=`<strong>${escapeHtml(label)}</strong><span>${escapeHtml(detail)}</span>`;
+      button.addEventListener('click',()=>{
+        setSelectedLocation({
+          label,
+          latitude:item.latitude,
+          longitude:item.longitude,
+          timeZone:item.timezone
+        });
+        results.classList.remove('open');
+        results.innerHTML='';
+        message.textContent='Location selected.';
+      });
+
+      results.appendChild(button);
+    });
+
+    results.classList.add('open');
+    message.textContent='Select the correct location.';
+  }catch(error){
+    console.error('Location search failed',error);
+    results.classList.remove('open');
+    message.textContent='Location search is temporarily unavailable.';
+  }
+}
+
 function fillForm(c,{allowEmptyNotices=false}={}){
   currentConfig={...c};
 
@@ -303,10 +515,12 @@ function fillForm(c,{allowEmptyNotices=false}={}){
 
   if(notices.length)saveNoticeBackup(notices);
 
-  $('locationLabel').value=c.location?.label||'';
-  $('latitude').value=c.location?.latitude??'';
-  $('longitude').value=c.location?.longitude??'';
-  $('timeZone').value=c.timeZone||'';
+  setSelectedLocation(c.location?{
+    label:c.location.label||'',
+    latitude:c.location.latitude,
+    longitude:c.location.longitude,
+    timeZone:c.timeZone||c.location.timeZone||''
+  }:null);
   $('youtubeUrl').value=c.youtubeUrl||'';
   $('showVideo').checked=c.showVideo!==false;
   $('dynamicBackground').checked=c.dynamicBackground!==false;
@@ -321,11 +535,11 @@ function buildConfig(){
   syncNoticeInputs();
   return {
     ...currentConfig,
-    timeZone:$('timeZone').value.trim(),
+    timeZone:selectedLocation?.timeZone||$('timeZone').value.trim(),
     location:{
-      label:$('locationLabel').value.trim(),
-      latitude:Number($('latitude').value),
-      longitude:Number($('longitude').value)
+      label:selectedLocation?.label||$('locationLabel').value.trim(),
+      latitude:selectedLocation?.latitude??Number($('latitude').value),
+      longitude:selectedLocation?.longitude??Number($('longitude').value)
     },
     youtubeUrl:$('youtubeUrl').value.trim(),
     showVideo:$('showVideo').checked,
@@ -398,6 +612,11 @@ async function saveConfig(){
     return;
   }
 
+  if(!selectedLocation||!Number.isFinite(selectedLocation.latitude)||!Number.isFinite(selectedLocation.longitude)){
+    alert('Select a valid display location from the search results before saving.');
+    return;
+  }
+
   setStatus('Checking latest version…');
   $('saveBtn').disabled=true;
 
@@ -454,6 +673,32 @@ async function saveConfig(){
   }
 }
 
+$('locationSearch').addEventListener('input',()=>{
+  clearTimeout(locationSearchTimer);
+  const query=$('locationSearch').value;
+  locationSearchTimer=setTimeout(()=>searchLocations(query),350);
+});
+
+$('locationSearch').addEventListener('keydown',event=>{
+  if(event.key==='Escape'){
+    $('locationResults').classList.remove('open');
+  }
+});
+
+$('changeLocationBtn').addEventListener('click',()=>{
+  const prior=selectedLocation?.label||'';
+  setSelectedLocation(null);
+  $('locationSearch').value=prior;
+  $('locationSearch').focus();
+  $('locationMessage').textContent='Search and select a new location.';
+});
+
+document.addEventListener('click',event=>{
+  if(!event.target.closest('.location-search')){
+    $('locationResults').classList.remove('open');
+  }
+});
+
 $('addNoticeBtn').addEventListener('click',()=>{
   syncNoticeInputs();
   notices.push({message:'',priority:'normal',start:'',expires:''});
@@ -507,6 +752,14 @@ $('loadBtn').addEventListener('click',()=>{
 $('saveBtn').addEventListener('click',saveConfig);
 $('previewBtn').addEventListener('click',()=>alert(JSON.stringify(buildConfig(),null,2)));
 $('forgetBtn').addEventListener('click',()=>{sessionStorage.removeItem('displayAdminToken');$('token').value='';setStatus('Token cleared')});
+$('repoToggle').addEventListener('click',()=>{
+  const section=$('repoSection');
+  const expanded=$('repoToggle').getAttribute('aria-expanded')==='true';
+  section.classList.toggle('collapsed',expanded);
+  $('repoToggle').setAttribute('aria-expanded',String(!expanded));
+  $('repoToggle').textContent=expanded?'+':'−';
+});
+
 $('setupBtn').addEventListener('click',()=>$('setupModal').classList.add('open'));
 $('closeModal').addEventListener('click',()=>$('setupModal').classList.remove('open'));
 $('setupModal').addEventListener('click',e=>{if(e.target===$('setupModal'))$('setupModal').classList.remove('open')});

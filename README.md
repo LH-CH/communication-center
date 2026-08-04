@@ -85,3 +85,26 @@ Examples:
 - `Expires Aug 5 · 08:00`
 
 Notices without an expiration remain visually unchanged.
+
+
+## Collapsible repository access
+
+The Repository access section is collapsed by default.
+
+- Press `+` to expand it
+- Press `−` to collapse it
+- The section contains repository owner, repository name, branch, config path, and token controls
+
+
+## Searchable display location
+
+The admin page now uses a searchable location field powered by the Open-Meteo Geocoding API.
+
+Start typing a city or ZIP code and select a result. The application stores the returned:
+
+- Display label
+- Latitude
+- Longitude
+- Time zone
+
+Latitude, longitude, and time zone are no longer shown as editable fields. They remain stored internally in `config.json` for NWS weather, sunrise, sunset, and clock calculations.
