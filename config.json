@@ -12,7 +12,26 @@
   "configRefreshSeconds": 30,
   "pageRefreshMinutes": 60,
   "noticeRotationSeconds": 10,
-  "notices": [],
+  "notices": [
+    {
+      "message": "TEST 1",
+      "priority": "normal",
+      "start": "2026-08-04T22:00:00.000Z",
+      "expires": "2026-08-04T23:00:00.000Z"
+    },
+    {
+      "message": "TEST 2",
+      "priority": "important",
+      "start": "2026-08-04T22:01:00.000Z",
+      "expires": "2026-08-04T23:01:00.000Z"
+    },
+    {
+      "message": "TEST 3",
+      "priority": "urgent",
+      "start": "2026-08-04T22:01:00.000Z",
+      "expires": "2026-08-04T23:01:00.000Z"
+    }
+  ],
   "dynamicBackground": true,
   "backgroundTransitionMinutes": 75
 }
