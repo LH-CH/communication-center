@@ -14,9 +14,9 @@
   "noticeRotationSeconds": 10,
   "notices": [
     {
-      "message": "",
-      "start": "",
-      "expires": "",
+      "message": "Normal Notice Test",
+      "start": "2026-08-04T22:49:00.000Z",
+      "expires": "2026-08-04T23:49:00.000Z",
       "priority": "normal"
     }
   ],
