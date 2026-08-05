@@ -15,5 +15,5 @@
   "notices": [],
   "dynamicBackground": true,
   "backgroundTransitionMinutes": 75,
-  "showNoticeManager": false
+  "showNoticeManager": true
 }
