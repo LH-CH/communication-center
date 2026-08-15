@@ -160,3 +160,36 @@ Configuration key:
 ```json
 "showNoticeManager": true
 ```
+
+
+## Footer layout update
+
+The footer order is now:
+
+1. Current weather
+2. Active weather alerts
+3. Department notices
+
+Supporting weather text is larger for TV readability while temperature and the main weather icon keep their current size.
+
+If the notice manager is disabled, the notice column disappears and the remaining weather and alert sections expand automatically.
+
+
+## Department notice popup banner
+
+Department notices no longer occupy a permanent section in the bottom information bar.
+
+The bottom bar is always:
+
+1. Current weather
+2. Active weather alerts
+
+When a department notice becomes active:
+
+- A separate banner appears directly above the bottom bar
+- The banner fades/slides into view
+- Multiple notices remain vertically stacked and rotate automatically
+- Adjacent notices fade toward the top and bottom
+- Notice expiration remains subtly visible
+- The banner disappears automatically when no notices are active
+- Disabling Notice Manager prevents the banner from appearing

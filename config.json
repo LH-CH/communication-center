@@ -12,7 +12,14 @@
   "configRefreshSeconds": 30,
   "pageRefreshMinutes": 60,
   "noticeRotationSeconds": 10,
-  "notices": [],
+  "notices": [
+    {
+      "message": "",
+      "start": "",
+      "expires": "",
+      "priority": "normal"
+    }
+  ],
   "dynamicBackground": true,
   "backgroundTransitionMinutes": 75,
   "showNoticeManager": true
