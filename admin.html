@@ -156,6 +156,38 @@ textarea{min-height:84px;resize:vertical}
 .switch input:checked+.slider:before{transform:translateX(18px);background:#04111c}
 .repo-box{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .token-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.remember-access{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-top:10px;
+  padding:2px 0 0;
+}
+.remember-access input{
+  width:16px;
+  height:16px;
+  margin:2px 0 0;
+  accent-color:var(--accent);
+  flex:none;
+}
+.remember-access-copy{
+  min-width:0;
+}
+.remember-access-copy strong{
+  display:block;
+  color:var(--text);
+  font-size:13px;
+  font-weight:600;
+  line-height:1.25;
+}
+.remember-access-copy span{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+  margin-top:3px;
+}
+
 .help{color:var(--muted);font-size:12px;line-height:1.45}
 .status{font-size:13px;color:var(--muted)}
 .status.ok{color:var(--ok)}
@@ -221,9 +253,16 @@ ol{color:#cbd7e2;line-height:1.55}
       <label>Fine-grained access token</label>
       <div class="token-row">
         <input id="token" type="password" autocomplete="off" placeholder="github_pat_...">
-        <button id="forgetBtn">Forget</button>
+        <button id="forgetBtn" type="button">Forget</button>
       </div>
-      <div class="help">The token stays in this browser tab only. It is never written into the website files.</div>
+
+      <label class="remember-access" for="rememberAccess">
+        <input id="rememberAccess" type="checkbox">
+        <span class="remember-access-copy">
+          <strong>Remember repository access on this device</strong>
+          <span>Stores the token only in this browser. It is never written to GitHub, config.json, or the website files.</span>
+        </span>
+      </label>
     </div>
     </div>
 
@@ -351,9 +390,41 @@ let locationSearchTimer=null;
 let selectedLocation=null;
 let localLocations=[];
 const noticeBackupKey='displayAdminNoticeBackupV1';
+const sessionTokenKey='displayAdminToken';
+const persistentTokenKey='displayAdminTokenPersistent';
+const rememberAccessKey='displayAdminRememberAccess';
 
 const enc=s=>btoa(unescape(encodeURIComponent(s)));
 const dec=s=>decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
+
+function persistRepositoryAccess(){
+  const token=$('token').value.trim();
+  const remember=$('rememberAccess').checked;
+
+  sessionStorage.removeItem(sessionTokenKey);
+
+  if(remember){
+    localStorage.setItem(rememberAccessKey,'true');
+    if(token)localStorage.setItem(persistentTokenKey,token);
+    else localStorage.removeItem(persistentTokenKey);
+  }else{
+    localStorage.removeItem(rememberAccessKey);
+    localStorage.removeItem(persistentTokenKey);
+    if(token)sessionStorage.setItem(sessionTokenKey,token);
+  }
+}
+
+function loadRememberedRepositoryAccess(){
+  const remember=localStorage.getItem(rememberAccessKey)==='true';
+  $('rememberAccess').checked=remember;
+
+  const token=remember
+    ? localStorage.getItem(persistentTokenKey)||''
+    : sessionStorage.getItem(sessionTokenKey)||'';
+
+  $('token').value=token;
+  return Boolean(token);
+}
 
 function apiUrl(){
   const owner=$('owner').value.trim();
@@ -744,7 +815,7 @@ function buildConfig(){
 
 async function loadConfig(){
   const token=$('token').value.trim();
-  if(token)sessionStorage.setItem('displayAdminToken',token);
+  persistRepositoryAccess();
   setStatus('Loading…');
 
   try{
@@ -801,6 +872,8 @@ async function saveConfig(){
     alert('A GitHub token is required to save.');
     return;
   }
+
+  persistRepositoryAccess();
 
   if(!selectedLocation||!Number.isFinite(selectedLocation.latitude)||!Number.isFinite(selectedLocation.longitude)){
     alert('Select a valid display location from the search results before saving.');
@@ -981,7 +1054,23 @@ $('loadBtn').addEventListener('click',()=>{
 });
 $('saveBtn').addEventListener('click',saveConfig);
 $('previewBtn').addEventListener('click',()=>alert(JSON.stringify(buildConfig(),null,2)));
-$('forgetBtn').addEventListener('click',()=>{sessionStorage.removeItem('displayAdminToken');$('token').value='';setStatus('Token cleared')});
+$('rememberAccess').addEventListener('change',()=>{
+  persistRepositoryAccess();
+  setStatus(
+    $('rememberAccess').checked
+      ? 'Access will be remembered on this device'
+      : 'Access will last for this browser session'
+  );
+});
+
+$('forgetBtn').addEventListener('click',()=>{
+  sessionStorage.removeItem(sessionTokenKey);
+  localStorage.removeItem(persistentTokenKey);
+  localStorage.removeItem(rememberAccessKey);
+  $('token').value='';
+  $('rememberAccess').checked=false;
+  setStatus('Repository access forgotten');
+});
 $('repoToggle').addEventListener('click',()=>{
   const section=$('repoSection');
   const expanded=$('repoToggle').getAttribute('aria-expanded')==='true';
@@ -995,8 +1084,8 @@ $('closeModal').addEventListener('click',()=>$('setupModal').classList.remove('o
 $('setupModal').addEventListener('click',e=>{if(e.target===$('setupModal'))$('setupModal').classList.remove('open')});
 
 loadLocalLocations();
-$('token').value=sessionStorage.getItem('displayAdminToken')||'';
-if(!$('token').value)$('setupModal').classList.add('open');
+const hasStoredAccess=loadRememberedRepositoryAccess();
+if(!hasStoredAccess)$('setupModal').classList.add('open');
 </script>
 </body>
 </html>

@@ -232,3 +232,25 @@ The full display page now automatically refreshes every 10 minutes.
 - The 2x2 stat block is centered in its available area.
 - Weather alerts are centered within the far-right section.
 - Left/right padding is more symmetrical across the footer.
+
+
+## Clock spacing update
+
+- Reduced negative letter spacing so adjacent digits no longer visually touch
+- Added consistent spacing between the main time and seconds
+- Enabled tabular numerals for a steadier clock layout
+- Increased the date size for better TV readability
+
+
+## Remember repository access
+
+The Admin page now includes:
+
+**Remember repository access on this device**
+
+- Off: token is stored only in `sessionStorage` for the current browser session
+- On: token is stored in this browser's `localStorage` and restored after the browser is reopened
+- **Forget** clears both session and persistent copies
+- The token is never written to `config.json`, GitHub Pages files, or the repository
+
+Only enable persistent storage on a trusted device/browser profile.
