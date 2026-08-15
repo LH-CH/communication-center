@@ -224,3 +224,11 @@ The full display page now automatically refreshes every 10 minutes.
 - Increased secondary weather labels and values by approximately 25%+
 - Kept the main temperature and weather icon at their existing size
 - Weather alerts remain aligned at the far right
+
+
+## Balanced footer spacing
+- Rebalanced the footer into a two-thirds weather area and one-third alert area.
+- Current conditions and the four weather statistics now use more even internal spacing.
+- The 2x2 stat block is centered in its available area.
+- Weather alerts are centered within the far-right section.
+- Left/right padding is more symmetrical across the footer.
