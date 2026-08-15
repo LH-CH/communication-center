@@ -215,3 +215,12 @@ The full display page now automatically refreshes every 10 minutes.
 - Temperature and main icon remain the dominant elements.
 - Weather alerts remain isolated at the far right with a subtle divider.
 - Full-page refresh remains 10 minutes.
+
+
+## Weather footer spacing update
+
+- Added left-side breathing room around the current weather icon and temperature
+- Centered Wind, Humidity, Sunrise, and Sunset as a balanced 2×2 group
+- Increased secondary weather labels and values by approximately 25%+
+- Kept the main temperature and weather icon at their existing size
+- Weather alerts remain aligned at the far right

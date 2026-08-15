@@ -1186,3 +1186,84 @@ init();
   }
 }
 </style>
+
+<style>
+/* Final weather footer tuning */
+
+/* Give the current weather block more breathing room from the left edge. */
+#dashboardFooter .weather-section{
+  padding-left:clamp(28px,2.2vw,48px);
+}
+
+/* Keep icon + temperature unchanged, but move the group in from the edge. */
+.current .weather-summary{
+  padding-left:clamp(8px,.7vw,14px);
+}
+
+/* Center the four secondary weather stats as a balanced 2x2 group. */
+.current .metrics{
+  justify-self:center;
+  align-self:center;
+  width:min(100%,520px);
+  grid-template-columns:repeat(2,minmax(150px,1fr));
+  column-gap:clamp(46px,3.4vw,70px);
+  row-gap:clamp(24px,2.2vh,34px);
+  place-content:center;
+}
+
+/* Increase secondary weather text by at least ~25%. */
+.current .metric{
+  grid-template-columns:22px minmax(0,1fr);
+  column-gap:11px;
+  justify-content:center;
+}
+
+.current .metric-icon{
+  width:21px;
+  height:21px;
+}
+
+.current .metric span:last-child{
+  font-size:clamp(17px,1.12vw,21px);
+  line-height:1.2;
+}
+
+.current .metric b{
+  font-size:clamp(21px,1.38vw,27px) !important;
+  line-height:1.15;
+  margin-top:5px;
+}
+
+/* Condition is easier to read, but remains secondary to temperature. */
+.current .condition{
+  font-size:clamp(20px,1.32vw,25px) !important;
+  line-height:1.25;
+  margin-top:8px;
+}
+
+/* Preserve a clean alert block on the far right. */
+#dashboardFooter .alert-section{
+  justify-self:end;
+  width:100%;
+}
+
+@media(max-width:1500px){
+  #dashboardFooter .weather-section{
+    padding-left:22px;
+  }
+
+  .current .metrics{
+    width:min(100%,460px);
+    column-gap:34px;
+    row-gap:20px;
+  }
+
+  .current .metric span:last-child{
+    font-size:16px;
+  }
+
+  .current .metric b{
+    font-size:21px !important;
+  }
+}
+</style>
