@@ -10,7 +10,7 @@
   "weatherRefreshMinutes": 10,
   "alertsRefreshMinutes": 5,
   "configRefreshSeconds": 30,
-  "pageRefreshMinutes": 60,
+  "pageRefreshMinutes": 10,
   "noticeRotationSeconds": 10,
   "notices": [
     {

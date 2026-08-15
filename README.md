@@ -193,3 +193,17 @@ When a department notice becomes active:
 - Notice expiration remains subtly visible
 - The banner disappears automatically when no notices are active
 - Disabling Notice Manager prevents the banner from appearing
+
+
+## Bottom bar readability refinement
+
+- Current weather remains on the left
+- Active weather alerts are anchored to the far right
+- Temperature and primary weather icon retain their existing size
+- Condition, wind, humidity, sunrise, sunset, and supporting weather text are moderately larger for across-the-room readability
+- Department notices remain a separate popup banner above the bottom bar
+
+
+## Refresh interval
+
+The full display page now automatically refreshes every 10 minutes.

@@ -716,7 +716,7 @@ function fillForm(c,{allowEmptyNotices=false}={}){
   $('backgroundTransitionMinutes').value=c.backgroundTransitionMinutes??75;
   $('noticeRotationSeconds').value=c.noticeRotationSeconds??10;
   $('configRefreshSeconds').value=c.configRefreshSeconds??30;
-  $('pageRefreshMinutes').value=c.pageRefreshMinutes??60;
+  $('pageRefreshMinutes').value=c.pageRefreshMinutes??10;
   renderNotices();
 }
 
