@@ -207,3 +207,11 @@ When a department notice becomes active:
 ## Refresh interval
 
 The full display page now automatically refreshes every 10 minutes.
+
+
+## Weather ribbon refinement
+- Weather information is grouped more tightly instead of spreading across the entire footer.
+- Wind, humidity, sunrise, and sunset labels/values are larger for TV viewing.
+- Temperature and main icon remain the dominant elements.
+- Weather alerts remain isolated at the far right with a subtle divider.
+- Full-page refresh remains 10 minutes.

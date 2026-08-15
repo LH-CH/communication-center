@@ -1086,3 +1086,103 @@ init();
   }
 }
 </style>
+
+<style>
+/* Refined bottom weather ribbon:
+   tighter grouping, larger supporting text, less wasted space. */
+#dashboardFooter{
+  grid-template-columns:minmax(0,1fr) minmax(340px,26vw) !important;
+  column-gap:clamp(42px,4vw,76px);
+  align-items:center;
+}
+
+#dashboardFooter .weather-section{
+  display:grid;
+  grid-template-columns:minmax(250px,.8fr) minmax(420px,1.25fr);
+  align-items:center;
+  gap:clamp(34px,3vw,64px);
+  width:min(100%,1050px);
+}
+
+.current .weather-primary{
+  min-width:0;
+}
+
+/* Main temp/icon remain the visual anchor. */
+.current .condition{
+  font-size:clamp(19px,1.25vw,24px) !important;
+  margin-top:4px;
+  color:rgba(224,235,246,.88);
+}
+
+/* Make supporting metrics clearly readable from across the room. */
+.current .weather-meta,
+.current .details{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(150px,1fr));
+  column-gap:clamp(38px,3vw,64px);
+  row-gap:clamp(18px,2vh,28px);
+  align-items:center;
+}
+
+.current .detail{
+  min-width:0;
+}
+
+.current .meta-label,
+.current .detail-label{
+  font-size:clamp(15px,.96vw,18px) !important;
+  line-height:1.2;
+  color:rgba(174,202,229,.9);
+}
+
+.current .meta-value,
+.current .detail-value{
+  font-size:clamp(18px,1.12vw,22px) !important;
+  line-height:1.25;
+  font-weight:600;
+  color:var(--text);
+}
+
+/* Weather alerts stay visually separate at the far right. */
+#dashboardFooter .alert-section{
+  justify-self:stretch;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  border-left:1px solid rgba(159,185,211,.14);
+  padding-left:clamp(30px,2.6vw,52px);
+  max-width:none;
+}
+
+#dashboardFooter .alerts{
+  width:100%;
+}
+
+#dashboardFooter .alerts,
+#dashboardFooter .alerts *{
+  text-align:left;
+}
+
+@media(max-width:1500px){
+  #dashboardFooter{
+    grid-template-columns:minmax(0,1fr) minmax(300px,28vw) !important;
+    column-gap:30px;
+  }
+
+  #dashboardFooter .weather-section{
+    grid-template-columns:minmax(220px,.75fr) minmax(360px,1.2fr);
+    gap:28px;
+  }
+
+  .current .weather-meta,
+  .current .details{
+    column-gap:28px;
+    row-gap:16px;
+  }
+
+  #dashboardFooter .alert-section{
+    padding-left:24px;
+  }
+}
+</style>
