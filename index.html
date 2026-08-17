@@ -669,7 +669,7 @@ function startNoticeRotation(){
   activeNoticeIndex=0;
   renderNoticeStack();
 
-  const seconds=Math.max(3,Number(CONFIG.noticeRotationSeconds)||10);
+  const seconds=10;
   noticeTimer=setInterval(advanceNotice,seconds*1000);
 }
 
@@ -843,148 +843,18 @@ function scheduleRefreshTimers(){
   clearInterval(alertsTimer);
   clearTimeout(pageRefreshTimer);
 
-  const configSeconds=Math.max(10,Number(CONFIG.configRefreshSeconds)||30);
-  const weatherMinutes=Math.max(1,Number(CONFIG.weatherRefreshMinutes)||10);
-  const alertsMinutes=Math.max(1,Number(CONFIG.alertsRefreshMinutes)||5);
-  const pageMinutes=Math.max(5,Number(CONFIG.pageRefreshMinutes)||60);
-
-  configTimer=setInterval(()=>loadConfig(false),configSeconds*1000);
-  weatherTimer=setInterval(()=>refreshWeather(false),weatherMinutes*60*1000);
-  alertsTimer=setInterval(refreshAlerts,alertsMinutes*60*1000);
+  // Hard-coded maintenance schedule:
+  // config.json check: every 30 minutes
+  // full page refresh: every 30 minutes
+  // current weather: every 10 minutes
+  // active NWS alerts: every 5 minutes
+  configTimer=setInterval(()=>loadConfig(false),30*60*1000);
+  weatherTimer=setInterval(()=>refreshWeather(false),10*60*1000);
+  alertsTimer=setInterval(refreshAlerts,5*60*1000);
 
   pageRefreshTimer=setTimeout(()=>{
     location.reload();
-  },pageMinutes*60*1000);
-}
-
-function hexToRgb(hex){
-  const value=hex.replace('#','');
-  return {
-    r:parseInt(value.slice(0,2),16),
-    g:parseInt(value.slice(2,4),16),
-    b:parseInt(value.slice(4,6),16)
-  };
-}
-
-function mixColor(a,b,t){
-  const A=hexToRgb(a),B=hexToRgb(b);
-  const c=k=>Math.round(A[k]+(B[k]-A[k])*Math.max(0,Math.min(1,t)));
-  return `rgb(${c('r')},${c('g')},${c('b')})`;
-}
-
-function localDateParts(date,tz){
-  const parts=new Intl.DateTimeFormat('en-US',{
-    timeZone:tz,
-    year:'numeric',
-    month:'2-digit',
-    day:'2-digit',
-    hour:'2-digit',
-    minute:'2-digit',
-    second:'2-digit',
-    hourCycle:'h23'
-  }).formatToParts(date);
-  const get=t=>Number(parts.find(p=>p.type===t)?.value||0);
-  return {
-    year:get('year'),
-    month:get('month'),
-    day:get('day'),
-    hour:get('hour'),
-    minute:get('minute'),
-    second:get('second')
-  };
-}
-
-function localMinutes(date,tz){
-  const p=localDateParts(date,tz);
-  return p.hour*60+p.minute+p.second/60;
-}
-
-function updateDynamicBackground(force=false){
-  if(CONFIG.dynamicBackground===false){
-    document.body.style.setProperty('--sky-top','#020916');
-    document.body.style.setProperty('--sky-bottom','#020b18');
-    document.body.style.setProperty('--sky-glow','rgba(101,199,247,.035)');
-    return;
-  }
-
-  const lat=Number(CONFIG.location?.latitude);
-  const lon=Number(CONFIG.location?.longitude);
-  const tz=CONFIG.timeZone||'America/Denver';
-
-  if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
-
-  const now=new Date();
-  const minuteKey=Math.floor(now.getTime()/60000);
-  if(!force&&minuteKey===lastBackgroundMinute)return;
-  lastBackgroundMinute=minuteKey;
-
-  const rise=solar(now,lat,lon,true);
-  const set=solar(now,lat,lon,false);
-  if(!rise||!set)return;
-
-  const nowMin=localMinutes(now,tz);
-  const riseMin=localMinutes(rise,tz);
-  const setMin=localMinutes(set,tz);
-  const transition=90;
-
-  /* Deliberately restrained, but visibly different palettes. */
-  const palettes={
-    night:{
-      top:'#01050d',
-      bottom:'#020916',
-      glow:'#07182b'
-    },
-    dawn:{
-      top:'#17243a',
-      bottom:'#352a42',
-      glow:'#8c6670'
-    },
-    day:{
-      top:'#0b2942',
-      bottom:'#103853',
-      glow:'#3a7e9c'
-    },
-    dusk:{
-      top:'#18263b',
-      bottom:'#442a40',
-      glow:'#9a5f6e'
-    }
-  };
-
-  let from,to,t=0;
-
-  if(nowMin<riseMin-transition){
-    from=to=palettes.night;
-  }else if(nowMin<riseMin){
-    from=palettes.night;
-    to=palettes.dawn;
-    t=(nowMin-(riseMin-transition))/transition;
-  }else if(nowMin<riseMin+transition){
-    from=palettes.dawn;
-    to=palettes.day;
-    t=(nowMin-riseMin)/transition;
-  }else if(nowMin<setMin-transition){
-    from=to=palettes.day;
-  }else if(nowMin<setMin){
-    from=palettes.day;
-    to=palettes.dusk;
-    t=(nowMin-(setMin-transition))/transition;
-  }else if(nowMin<setMin+transition){
-    from=palettes.dusk;
-    to=palettes.night;
-    t=(nowMin-setMin)/transition;
-  }else{
-    from=to=palettes.night;
-  }
-
-  document.body.style.setProperty('--sky-top',mixColor(from.top,to.top,t));
-  document.body.style.setProperty('--sky-bottom',mixColor(from.bottom,to.bottom,t));
-
-  const glow=mixColor(from.glow,to.glow,t);
-  document.body.style.setProperty(
-    '--sky-glow',
-    glow.replace('rgb(','rgba(').replace(')',',.18)')
-  );
+  },30*60*1000);
 }
 
 window.addEventListener('resize',()=>{

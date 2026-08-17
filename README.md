@@ -276,3 +276,20 @@ Only enable persistent storage on a trusted device/browser profile.
 - Video is guaranteed a separate right-hand column
 - Clock no longer overlaps or underlaps the video
 - Repeated digits retain added spacing while the overall clock is slightly smaller for reliable fit
+
+
+## Simplified settings
+
+The timing controls were removed from Admin.
+
+Only **Dynamic background** remains as a user-facing On/Off setting.
+
+Timing is now hard-coded:
+
+- `config.json` check: every 30 minutes
+- full page refresh: every 30 minutes
+- current weather refresh: every 10 minutes
+- NWS alert refresh: every 5 minutes
+- notice rotation: every 10 seconds
+
+These values are no longer stored in `config.json`.
