@@ -843,7 +843,7 @@ function scheduleRefreshTimers(){
   clearInterval(alertsTimer);
   clearTimeout(pageRefreshTimer);
 
-  // Fixed refresh schedule. These values are intentionally not configurable.
+  // Fixed refresh schedule.
   configTimer=setInterval(()=>loadConfig(false),30*60*1000);
   weatherTimer=setInterval(()=>refreshWeather(false),10*60*1000);
   alertsTimer=setInterval(refreshAlerts,5*60*1000);
@@ -1344,95 +1344,142 @@ body{
 </style>
 
 <style>
-/* ===== CLOCK / VIDEO COLLISION FIX ===== */
+/* =========================================================
+   FINAL CLOCK / VIDEO LAYOUT
+   ========================================================= */
 
-/* Give the left and right panels explicit room so the clock cannot overlap video. */
+/* Keep the two hero areas clearly separated. */
 main{
-  grid-template-columns:minmax(0,0.92fr) minmax(520px,1.08fr) !important;
-  gap:clamp(44px,3.6vw,76px) !important;
+  grid-template-columns:minmax(0, .94fr) minmax(500px, 1.06fr) !important;
+  gap:clamp(42px,3.2vw,68px) !important;
 }
 
-/* Constrain the clock to its own column. */
+/* Use the clock panel itself as the responsive sizing container. */
 .clock-panel{
+  container-type:inline-size;
   min-width:0 !important;
-  overflow:hidden !important;
-  padding-left:clamp(46px,4vw,86px) !important;
-  padding-right:0 !important;
+  overflow:visible !important;
   justify-content:flex-start !important;
+  padding-left:clamp(54px,4vw,86px) !important;
+  padding-right:0 !important;
 }
 
 .clock-wrap{
   min-width:0 !important;
+  width:100% !important;
   max-width:100% !important;
-  overflow:hidden !important;
+  padding:0 !important;
 }
 
-/* Slightly reduce max clock size so it always fits before the video column. */
+/* The entire clock must fit inside the left column. */
+.time-row{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  gap:0 !important;
+  min-width:0 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+}
+
+/* Container-relative sizing prevents the clock from crossing into the video.
+   Positive tracking specifically fixes repeated numerals such as 44. */
 #time{
-  font-size:clamp(132px,17.2vw,320px) !important;
-  letter-spacing:.018em !important;
+  flex:0 1 auto !important;
+  min-width:0 !important;
+  font-size:clamp(118px,28cqw,255px) !important;
+  letter-spacing:.028em !important;
+  font-variant-numeric:tabular-nums !important;
+  font-feature-settings:"tnum" 1 !important;
+  line-height:.88 !important;
   white-space:nowrap !important;
 }
 
-/* Seconds stay within the clock column instead of pushing into video. */
+/* Seconds stay visually separate without forcing the minute digits off-screen. */
 #seconds{
   flex:0 0 auto !important;
-  font-size:clamp(34px,3.6vw,68px) !important;
-  margin-left:clamp(12px,.8vw,18px) !important;
+  font-size:clamp(30px,7.2cqw,66px) !important;
+  margin:.04em 0 0 clamp(12px,1vw,18px) !important;
 }
 
-/* Date remains larger but centered beneath the clock. */
+/* Larger but still secondary to the time. */
 #date{
-  font-size:clamp(26px,2.05vw,39px) !important;
+  font-size:clamp(26px,4.2cqw,39px) !important;
+  margin-top:clamp(28px,3.2vh,46px) !important;
   text-align:center !important;
+  line-height:1.2 !important;
 }
 
-/* Video is guaranteed its own space. */
-.video-panel{
-  min-width:0 !important;
-  overflow:hidden !important;
-}
-
+/* Video owns its column and cannot be underlapped by the clock. */
+.video-panel,
 .video-shell{
-  width:100% !important;
+  min-width:0 !important;
   max-width:100% !important;
 }
 
-/* 1080p-ish / smaller displays */
+/* =========================================================
+   DYNAMIC BACKGROUND
+   ========================================================= */
+body{
+  --sky-top:#020916;
+  --sky-bottom:#020b18;
+  --sky-glow:rgba(101,199,247,.035);
+  background:
+    radial-gradient(circle at 18% 9%,var(--sky-glow),transparent 36%),
+    linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 100%) !important;
+}
+
+@property --sky-top{
+  syntax:"<color>";
+  inherits:true;
+  initial-value:#020916;
+}
+@property --sky-bottom{
+  syntax:"<color>";
+  inherits:true;
+  initial-value:#020b18;
+}
+@property --sky-glow{
+  syntax:"<color>";
+  inherits:true;
+  initial-value:rgba(101,199,247,.035);
+}
+
+body{
+  transition:
+    --sky-top 60s linear,
+    --sky-bottom 60s linear,
+    --sky-glow 60s linear;
+}
+
 @media(max-width:1500px){
   main{
-    grid-template-columns:minmax(0,.9fr) minmax(470px,1.1fr) !important;
-    gap:34px !important;
+    grid-template-columns:minmax(0,.92fr) minmax(440px,1.08fr) !important;
+    gap:30px !important;
   }
-
   .clock-panel{
     padding-left:34px !important;
   }
-
   #time{
-    font-size:clamp(118px,16vw,270px) !important;
-    letter-spacing:.02em !important;
+    font-size:clamp(105px,27cqw,225px) !important;
+    letter-spacing:.03em !important;
   }
-
   #seconds{
-    font-size:clamp(30px,3.2vw,58px) !important;
-    margin-left:12px !important;
-  }
-
-  #date{
-    font-size:clamp(24px,1.9vw,34px) !important;
+    font-size:clamp(28px,6.8cqw,54px) !important;
+    margin-left:10px !important;
   }
 }
 
-/* Very narrow fallback: keep clock inside its half instead of overlapping. */
 @media(max-width:1100px){
   main{
-    grid-template-columns:minmax(0,1fr) minmax(420px,1fr) !important;
-    gap:24px !important;
+    grid-template-columns:minmax(0,.9fr) minmax(380px,1.1fr) !important;
+    gap:22px !important;
   }
-
+  .clock-panel{
+    padding-left:24px !important;
+  }
   #time{
-    font-size:clamp(96px,14vw,220px) !important;
+    font-size:clamp(88px,25cqw,180px) !important;
   }
 }
 </style>
