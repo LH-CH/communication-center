@@ -1,92 +1,47 @@
 [
   {
-    "label": "Kalispell, Montana",
+    "label": "Kalispell, MT",
     "city": "Kalispell",
-    "state": "Montana",
+    "state": "MT",
     "zip": "59901",
     "latitude": 48.1958,
     "longitude": -114.3129,
     "timeZone": "America/Denver"
   },
   {
-    "label": "Whitefish, Montana",
+    "label": "Whitefish, MT",
     "city": "Whitefish",
-    "state": "Montana",
+    "state": "MT",
     "zip": "59937",
     "latitude": 48.4111,
     "longitude": -114.3376,
     "timeZone": "America/Denver"
   },
   {
-    "label": "Columbia Falls, Montana",
+    "label": "Columbia Falls, MT",
     "city": "Columbia Falls",
-    "state": "Montana",
+    "state": "MT",
     "zip": "59912",
     "latitude": 48.3725,
     "longitude": -114.1815,
     "timeZone": "America/Denver"
   },
   {
-    "label": "Bigfork, Montana",
+    "label": "Bigfork, MT",
     "city": "Bigfork",
-    "state": "Montana",
+    "state": "MT",
     "zip": "59911",
     "latitude": 48.0633,
     "longitude": -114.0726,
     "timeZone": "America/Denver"
   },
   {
-    "label": "Polson, Montana",
+    "label": "Polson, MT",
     "city": "Polson",
-    "state": "Montana",
+    "state": "MT",
     "zip": "59860",
     "latitude": 47.6936,
     "longitude": -114.1632,
-    "timeZone": "America/Denver"
-  },
-  {
-    "label": "Missoula, Montana",
-    "city": "Missoula",
-    "state": "Montana",
-    "zip": "59801",
-    "latitude": 46.8721,
-    "longitude": -113.994,
-    "timeZone": "America/Denver"
-  },
-  {
-    "label": "Great Falls, Montana",
-    "city": "Great Falls",
-    "state": "Montana",
-    "zip": "59401",
-    "latitude": 47.5053,
-    "longitude": -111.3008,
-    "timeZone": "America/Denver"
-  },
-  {
-    "label": "Helena, Montana",
-    "city": "Helena",
-    "state": "Montana",
-    "zip": "59601",
-    "latitude": 46.5884,
-    "longitude": -112.0245,
-    "timeZone": "America/Denver"
-  },
-  {
-    "label": "Bozeman, Montana",
-    "city": "Bozeman",
-    "state": "Montana",
-    "zip": "59715",
-    "latitude": 45.677,
-    "longitude": -111.0429,
-    "timeZone": "America/Denver"
-  },
-  {
-    "label": "Billings, Montana",
-    "city": "Billings",
-    "state": "Montana",
-    "zip": "59101",
-    "latitude": 45.7833,
-    "longitude": -108.5007,
     "timeZone": "America/Denver"
   }
 ]

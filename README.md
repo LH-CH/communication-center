@@ -1,24 +1,34 @@
-# Dashboard build v2.2
+# Display v3
 
-This build contains the current corrections.
+Fresh rebuild using plain HTML, CSS, and JavaScript modules.
 
-## Admin
-Only the intended toggles remain. The following controls are completely absent from `admin.html`:
-- Notice rotation
-- Config check
-- Page refresh
+## Structure
+- `index.html` — public TV display
+- `admin.html` — GitHub-backed admin page
+- `css/styles.css` — TV display styling
+- `css/admin.css` — admin styling
+- `js/display.js` — clock, video, config, dynamic background, refresh
+- `js/weather.js` — NWS current conditions and alerts
+- `js/notices.js` — popup notice banner and rotation
+- `js/admin.js` — admin form and GitHub publishing
+- `config.json` — display configuration
+- `locations.json` — local location fallback list
 
-The Admin subtitle displays `v2.2` so the deployed version is easy to verify.
-
-## Fixed timing
-- Config reload check: 30 minutes
+## Fixed refresh schedule
+- Config check: 30 minutes
 - Full page reload: 30 minutes
-- Weather refresh: 10 minutes
+- Weather: 10 minutes
 - NWS alerts: 5 minutes
-- Notice rotation: 10 seconds
+- Notices: 10-second rotation
 
-## Clock
-The clock now sizes itself from the width of its own panel using CSS container units. This prevents the last digit from being cut off or crossing into the video. Repeated numerals use positive tracking so values such as `44` remain separated.
+## Admin settings
+- YouTube URL
+- Show video
+- Dynamic background on/off
+- Notice Manager on/off
+- Location
+- Department notices
+- GitHub repository access
 
-## Dynamic background
-Dynamic background remains a single On/Off setting. Sunrise/sunset blending uses a fixed internal 90-minute transition.
+## Why this rebuild
+The previous version accumulated many inline CSS and JavaScript overrides. v3 separates layout, display logic, weather, notices, and admin behavior so future changes are easier to make without breaking unrelated areas.

@@ -2,12 +2,12 @@
   "timeZone": "America/Denver",
   "location": {
     "label": "Kalispell, MT",
-    "latitude": 48.197,
-    "longitude": -114.315
+    "latitude": 48.1958,
+    "longitude": -114.3129
   },
-  "youtubeUrl": "https://www.youtube.com/watch?v=J7ZrIDvqlic",
+  "youtubeUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
   "showVideo": true,
-  "notices": [],
   "dynamicBackground": true,
-  "showNoticeManager": true
+  "showNoticeManager": true,
+  "notices": []
 }
