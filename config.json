@@ -7,14 +7,7 @@
   },
   "youtubeUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
   "showVideo": true,
-  "notices": [
-    {
-      "message": "",
-      "start": "",
-      "expires": "",
-      "priority": "normal"
-    }
-  ],
+  "notices": [],
   "dynamicBackground": true,
   "showNoticeManager": true
 }
