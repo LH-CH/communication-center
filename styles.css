@@ -294,3 +294,5 @@ html,body{
 
 /* Prevent long alert / notice text from clipping. JS may also reduce font-size when needed. */
 .alert-title,.alert-detail,.notice-item{overflow-wrap:anywhere}
+
+.status-updated.stale{color:var(--warning);opacity:.8}

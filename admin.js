@@ -108,7 +108,6 @@ function build(){
   return {
     ...currentConfig,
     schemaVersion:'3.2',
-    revision:(Number(currentConfig.revision)||0)+1,
     updatedAt:new Date().toISOString(),
     timeZone:selectedLocation?.timeZone||'America/Denver',
     location:{label:selectedLocation?.label||'',latitude:selectedLocation?.latitude,longitude:selectedLocation?.longitude},
@@ -166,3 +165,14 @@ $('noticeList').onclick=e=>{const b=e.target.closest('[data-remove]');if(!b)retu
 
 restoreAccess();
 await loadLocations();
+
+function updateAdminStatusMeta(){
+  const rev=document.getElementById('adminRevision');
+  const pub=document.getElementById('adminLastPublished');
+  if(rev)rev.textContent=currentConfig?.revision ?? '—';
+  if(pub){
+    const d=currentConfig?.updatedAt?new Date(currentConfig.updatedAt):null;
+    pub.textContent=d&&!Number.isNaN(d.getTime())?d.toLocaleString():'Never';
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(updateAdminStatusMeta,250));

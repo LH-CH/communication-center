@@ -64,36 +64,17 @@ function showVideoFallback(){
 }
 function showVideoFrame(){
   clearTimeout(videoReadyTimer);
+  videoRetryCount=0;
+  clearTimeout(videoRetryTimer);
   $('videoFallback').style.display='none';
   $('videoFrame').style.display='block';
   state.video.lastSuccess=new Date().toISOString();
   setHealth('video','ok');
 }
-function loadYouTubeApi(){
-  if(window.YT?.Player)return Promise.resolve();
-  if(youtubeApiPromise)return youtubeApiPromise;
-  youtubeApiPromise=new Promise((resolve,reject)=>{
-    const prior=window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady=()=>{
-      prior?.();
-      resolve();
-    };
-    const s=document.createElement('script');
-    s.src='https://www.youtube.com/iframe_api';
-    s.async=true;
-    s.onerror=reject;
-    document.head.appendChild(s);
-    setTimeout(()=>reject(new Error('YouTube API timeout')),12000);
-  });
-  return youtubeApiPromise;
-}
-async function setVideo(){
+function setVideo(){
   const id=youtubeId(config.youtubeUrl||'');
   const frame=$('videoFrame');
-
-  try{youtubePlayer?.destroy?.()}catch{}
-  youtubePlayer=null;
-  frame.removeAttribute('src');
+  clearTimeout(videoReadyTimer);
 
   if(config.showVideo===false||!id){
     showVideoFallback();
@@ -102,31 +83,33 @@ async function setVideo(){
 
   state.video.lastAttempt=new Date().toISOString();
   setHealth('video','delayed');
-  $('videoFallback').style.display='flex';
+  $('videoFallback').style.display='none';
   frame.style.display='block';
 
-  videoReadyTimer=setTimeout(showVideoFallback,15000);
+  const src=`https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&loop=1&playlist=${encodeURIComponent(id)}`;
+  frame.onload=()=>showVideoFrame();
+  frame.onerror=()=>scheduleVideoRetry();
+  frame.src=src;
 
-  try{
-    await loadYouTubeApi();
-    youtubePlayer=new YT.Player('videoFrame',{
-      videoId:id,
-      playerVars:{autoplay:1,mute:1,controls:0,playsinline:1,rel:0,loop:1,playlist:id},
-      events:{
-        onReady:e=>{
-          try{e.target.mute();e.target.playVideo()}catch{}
-          showVideoFrame();
-        },
-        onError:()=>showVideoFallback(),
-        onStateChange:e=>{
-          if(e.data===YT.PlayerState.PLAYING||e.data===YT.PlayerState.BUFFERING)showVideoFrame();
-        }
-      }
-    });
-  }catch(e){
-    console.error('YouTube API failed',e);
-    showVideoFallback();
-  }
+  videoReadyTimer=setTimeout(()=>{
+    if(state.video.status!=='ok')scheduleVideoRetry();
+  },15000);
+}
+let videoRetryCount=0;
+let videoRetryTimer=null;
+function scheduleVideoRetry(){
+  clearTimeout(videoReadyTimer);
+  clearTimeout(videoRetryTimer);
+  videoRetryCount++;
+  setHealth('video',videoRetryCount<3?'delayed':'error');
+  if(videoRetryCount>=3)showVideoFallback();
+  const delay=Math.min(60000,5000*Math.pow(2,Math.min(videoRetryCount-1,3)));
+  videoRetryTimer=setTimeout(()=>{
+    const frame=$('videoFrame');
+    if(!frame)return;
+    frame.src='about:blank';
+    setTimeout(setVideo,250);
+  },delay);
 }
 
 function solar(date,lat,lon,rise){
@@ -151,7 +134,10 @@ function renderWeather(w,cached,savedAt){
   $('humidity').textContent=w.humidity==null?'--%':`${Math.round(w.humidity)}%`;
 
   const stamp=w.updated||savedAt;
-  $('updatedText').textContent=`Updated ${stamp?format24(stamp,config.timeZone||'America/Denver'):'--:--'}`;
+  const age=stamp?Date.now()-new Date(stamp).getTime():null;
+  const stale=Number.isFinite(age)&&age>2*60*60*1000;
+  $('updatedText').textContent=`Updated ${stamp?format24(stamp,config.timeZone||'America/Denver'):'--:--'}${stale?' · stale':''}`;
+  $('updatedText').classList.toggle('stale',!!stale);
 
   const lat=Number(config.location?.latitude),lon=Number(config.location?.longitude);
   if(Number.isFinite(lat)&&Number.isFinite(lon)){
@@ -366,12 +352,60 @@ function toggleDiagnostics(){
   renderDiagnostics();
 }
 
+
+let watchdogTimer=null;
+let midnightTimer=null;
+let lastClockSecond='';
+
+function watchdog(){
+  // Recover individual components rather than refreshing the page.
+  const current=$('timeSeconds')?.textContent||'';
+  if(current===lastClockSecond)updateClock();
+  lastClockSecond=current;
+
+  if(!document.getElementById('videoFrame'))location.reload();
+  if(state.video.status==='error'&&!videoRetryTimer)scheduleVideoRetry();
+
+  const now=Date.now();
+  const weatherAge=state.weather.lastSuccess?now-new Date(state.weather.lastSuccess).getTime():Infinity;
+  const alertsAge=state.alerts.lastSuccess?now-new Date(state.alerts.lastSuccess).getTime():Infinity;
+  const configAge=state.config.lastSuccess?now-new Date(state.config.lastSuccess).getTime():Infinity;
+  if(weatherAge>25*60*1000)refreshWeather();
+  if(alertsAge>15*60*1000)refreshAlerts();
+  if(configAge>65*60*1000)loadConfig(false);
+  renderDiagnostics();
+}
+
+function scheduleMidnightHousekeeping(){
+  clearTimeout(midnightTimer);
+  const tz=config.timeZone||'America/Denver';
+  const now=new Date();
+  // Check once a minute until local date changes; avoids timezone arithmetic complexity.
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+  const check=()=>{
+    const next=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    if(next!==today){
+      updateClock();
+      refreshWeather();
+      refreshAlerts();
+      startNotices(config);
+      scheduleMidnightHousekeeping();
+      return;
+    }
+    midnightTimer=setTimeout(check,60*1000);
+  };
+  midnightTimer=setTimeout(check,60*1000);
+}
+
 function schedule(){
   clearInterval(configTimer);clearInterval(weatherTimer);clearInterval(alertsTimer);clearInterval(burnTimer);
   configTimer=setInterval(()=>loadConfig(false),30*60*1000);
   weatherTimer=setInterval(refreshWeather,10*60*1000);
   alertsTimer=setInterval(refreshAlerts,5*60*1000);
   burnTimer=setInterval(burnShift,10*60*1000);
+  clearInterval(watchdogTimer);
+  watchdogTimer=setInterval(watchdog,5*60*1000);
+  scheduleMidnightHousekeeping();
 }
 
 initMetricIcons();

@@ -47,3 +47,20 @@ textarea{min-height:84px;resize:vertical}
 .notice-head{display:flex;justify-content:space-between;align-items:center}.notice-card{border:1px solid var(--border);border-radius:9px;background:var(--surface);padding:14px;margin-top:12px}.notice-card-head{display:flex;justify-content:space-between;align-items:center}.notice-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}.notice-grid .full{grid-column:1/-1}.notice-disabled{min-height:220px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:9px}
 .save-bar{position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:10px;padding:18px 0;background:linear-gradient(transparent,var(--bg) 35%)}
 @media(max-width:900px){.admin-grid,.two-col,.notice-grid{grid-template-columns:1fr}}
+
+.system-status-card{margin-top:18px}
+.section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.section-head h2{margin:0 0 4px}
+.helper{margin:0;color:var(--text-muted);font-size:13px}
+.status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
+.status-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-subtle);border-radius:8px;background:var(--bg)}
+.status-row span{display:flex;align-items:center;gap:8px;color:var(--text-secondary)}
+.status-row strong{font-size:13px}
+.admin-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--text-muted)}
+.admin-status-dot.ok{background:var(--success)}
+.publish-meta{display:flex;gap:28px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle)}
+.publish-meta div{display:flex;flex-direction:column;gap:4px}
+.publish-meta span{color:var(--text-muted);font-size:12px}
+.notice-row,.notice-card{transition:border-color .15s ease,background .15s ease}
+.notice-status{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--border);border-radius:999px;color:var(--text-secondary);font-size:11px}
+@media(max-width:900px){.status-grid{grid-template-columns:1fr 1fr}}
