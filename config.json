@@ -21,6 +21,5 @@
     }
   ],
   "dynamicBackground": true,
-  "backgroundTransitionMinutes": 90,
   "showNoticeManager": true
 }

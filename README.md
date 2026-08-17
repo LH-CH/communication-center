@@ -266,3 +266,13 @@ Only enable persistent storage on a trusted device/browser profile.
 - Day, dawn, dusk, and night palettes are now visibly distinct while remaining minimal
 - Background is recalculated every minute and immediately after configuration changes
 - Sunrise/sunset and saved display location determine the active palette
+
+
+## Latest layout correction
+
+- Dynamic background is now a simple On/Off setting only
+- The background transition duration is internal and no longer exposed in Admin
+- Clock size is constrained to its own column
+- Video is guaranteed a separate right-hand column
+- Clock no longer overlaps or underlaps the video
+- Repeated digits retain added spacing while the overall clock is slightly smaller for reliable fit

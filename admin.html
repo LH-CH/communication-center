@@ -335,9 +335,7 @@ ol{color:#cbd7e2;line-height:1.55}
     <div class="toggle"><span>Dynamic background</span><label class="switch"><input id="dynamicBackground" type="checkbox"><span class="slider"></span></label></div>
 
     <div class="row" style="margin-top:14px">
-      <div class="field"><label>Background transition (minutes)</label><input id="backgroundTransitionMinutes" type="number" min="30"></div>
       <div class="field"><label>Notice rotation (seconds)</label><input id="noticeRotationSeconds" type="number" min="5"></div>
-    </div>
     <div class="row">
       <div class="field"><label>Config check (seconds)</label><input id="configRefreshSeconds" type="number" min="10"></div>
       <div class="field"><label>Page refresh (minutes)</label><input id="pageRefreshMinutes" type="number" min="5"></div>
@@ -784,8 +782,7 @@ function fillForm(c,{allowEmptyNotices=false}={}){
   $('showNoticeManager').checked=c.showNoticeManager!==false;
   updateNoticeManagerVisibility();
   $('dynamicBackground').checked=c.dynamicBackground!==false;
-  $('backgroundTransitionMinutes').value=c.backgroundTransitionMinutes??75;
-  $('noticeRotationSeconds').value=c.noticeRotationSeconds??10;
+    $('noticeRotationSeconds').value=c.noticeRotationSeconds??10;
   $('configRefreshSeconds').value=c.configRefreshSeconds??30;
   $('pageRefreshMinutes').value=c.pageRefreshMinutes??10;
   renderNotices();
@@ -805,7 +802,6 @@ function buildConfig(){
     showVideo:$('showVideo').checked,
     showNoticeManager:$('showNoticeManager').checked,
     dynamicBackground:$('dynamicBackground').checked,
-    backgroundTransitionMinutes:Number($('backgroundTransitionMinutes').value)||75,
     noticeRotationSeconds:Number($('noticeRotationSeconds').value)||10,
     configRefreshSeconds:Number($('configRefreshSeconds').value)||30,
     pageRefreshMinutes:Number($('pageRefreshMinutes').value)||60,

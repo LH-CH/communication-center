@@ -925,7 +925,7 @@ function updateDynamicBackground(force=false){
   const nowMin=localMinutes(now,tz);
   const riseMin=localMinutes(rise,tz);
   const setMin=localMinutes(set,tz);
-  const transition=Math.max(45,Number(CONFIG.backgroundTransitionMinutes)||90);
+  const transition=90;
 
   /* Deliberately restrained, but visibly different palettes. */
   const palettes={
@@ -1476,6 +1476,100 @@ body{
 
   #date{
     font-size:clamp(24px,2vw,35px) !important;
+  }
+}
+</style>
+
+<style>
+/* ===== CLOCK / VIDEO COLLISION FIX ===== */
+
+/* Give the left and right panels explicit room so the clock cannot overlap video. */
+main{
+  grid-template-columns:minmax(0,0.92fr) minmax(520px,1.08fr) !important;
+  gap:clamp(44px,3.6vw,76px) !important;
+}
+
+/* Constrain the clock to its own column. */
+.clock-panel{
+  min-width:0 !important;
+  overflow:hidden !important;
+  padding-left:clamp(46px,4vw,86px) !important;
+  padding-right:0 !important;
+  justify-content:flex-start !important;
+}
+
+.clock-wrap{
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+
+/* Slightly reduce max clock size so it always fits before the video column. */
+#time{
+  font-size:clamp(132px,17.2vw,320px) !important;
+  letter-spacing:.018em !important;
+  white-space:nowrap !important;
+}
+
+/* Seconds stay within the clock column instead of pushing into video. */
+#seconds{
+  flex:0 0 auto !important;
+  font-size:clamp(34px,3.6vw,68px) !important;
+  margin-left:clamp(12px,.8vw,18px) !important;
+}
+
+/* Date remains larger but centered beneath the clock. */
+#date{
+  font-size:clamp(26px,2.05vw,39px) !important;
+  text-align:center !important;
+}
+
+/* Video is guaranteed its own space. */
+.video-panel{
+  min-width:0 !important;
+  overflow:hidden !important;
+}
+
+.video-shell{
+  width:100% !important;
+  max-width:100% !important;
+}
+
+/* 1080p-ish / smaller displays */
+@media(max-width:1500px){
+  main{
+    grid-template-columns:minmax(0,.9fr) minmax(470px,1.1fr) !important;
+    gap:34px !important;
+  }
+
+  .clock-panel{
+    padding-left:34px !important;
+  }
+
+  #time{
+    font-size:clamp(118px,16vw,270px) !important;
+    letter-spacing:.02em !important;
+  }
+
+  #seconds{
+    font-size:clamp(30px,3.2vw,58px) !important;
+    margin-left:12px !important;
+  }
+
+  #date{
+    font-size:clamp(24px,1.9vw,34px) !important;
+  }
+}
+
+/* Very narrow fallback: keep clock inside its half instead of overlapping. */
+@media(max-width:1100px){
+  main{
+    grid-template-columns:minmax(0,1fr) minmax(420px,1fr) !important;
+    gap:24px !important;
+  }
+
+  #time{
+    font-size:clamp(96px,14vw,220px) !important;
   }
 }
 </style>
