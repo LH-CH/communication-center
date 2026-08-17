@@ -5,11 +5,11 @@
     "latitude": 48.1958,
     "longitude": -114.3129
   },
-  "youtubeUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
+  "youtubeUrl": "https://www.youtube.com/watch?v=J7ZrIDvqlic",
   "showVideo": true,
   "showNoticeManager": true,
   "notices": [],
-  "schemaVersion": "3.3",
-  "revision": 2,
-  "updatedAt": "2026-08-17T20:00:00.000Z"
+  "schemaVersion": "3.2",
+  "revision": 3,
+  "updatedAt": "2026-08-17T21:29:13.631Z"
 }
