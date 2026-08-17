@@ -3,7 +3,7 @@ import {startNotices} from './notices.js';
 
 let config={};
 let configText='';
-let weatherTimer,alertsTimer,configTimer,pageTimer,backgroundTimer;
+let weatherTimer,alertsTimer,configTimer,pageTimer;
 
 const $=id=>document.getElementById(id);
 
@@ -107,53 +107,11 @@ async function refreshAlerts(){
   }
 }
 
-function mix(a,b,t){
-  const h=x=>({r:parseInt(x.slice(1,3),16),g:parseInt(x.slice(3,5),16),b:parseInt(x.slice(5,7),16)});
-  const A=h(a),B=h(b),c=k=>Math.round(A[k]+(B[k]-A[k])*Math.max(0,Math.min(1,t)));
-  return `rgb(${c('r')},${c('g')},${c('b')})`;
-}
-function localMinutes(date,tz){
-  const p=new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
-  const g=t=>Number(p.find(x=>x.type===t)?.value||0);
-  return g('hour')*60+g('minute')+g('second')/60;
-}
-function updateBackground(){
-  if(config.dynamicBackground===false){
-    document.body.style.setProperty('--sky-top','#020916');
-    document.body.style.setProperty('--sky-bottom','#020b18');
-    document.body.style.setProperty('--sky-glow','rgba(101,199,247,.035)');
-    return;
-  }
-  const lat=Number(config.location?.latitude),lon=Number(config.location?.longitude),tz=config.timeZone||'America/Denver';
-  if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
-  const now=new Date(),rise=solar(now,lat,lon,true),set=solar(now,lat,lon,false);
-  if(!rise||!set)return;
-  const n=localMinutes(now,tz),r=localMinutes(rise,tz),s=localMinutes(set,tz),span=90;
-  const P={
-    night:{top:'#01050d',bottom:'#020916',glow:'#07182b'},
-    dawn:{top:'#17243a',bottom:'#352a42',glow:'#8c6670'},
-    day:{top:'#0b2942',bottom:'#103853',glow:'#3a7e9c'},
-    dusk:{top:'#18263b',bottom:'#442a40',glow:'#9a5f6e'}
-  };
-  let a,b,t=0;
-  if(n<r-span){a=b=P.night}
-  else if(n<r){a=P.night;b=P.dawn;t=(n-(r-span))/span}
-  else if(n<r+span){a=P.dawn;b=P.day;t=(n-r)/span}
-  else if(n<s-span){a=b=P.day}
-  else if(n<s){a=P.day;b=P.dusk;t=(n-(s-span))/span}
-  else if(n<s+span){a=P.dusk;b=P.night;t=(n-s)/span}
-  else{a=b=P.night}
-  document.body.style.setProperty('--sky-top',mix(a.top,b.top,t));
-  document.body.style.setProperty('--sky-bottom',mix(a.bottom,b.bottom,t));
-  const glow=mix(a.glow,b.glow,t).replace('rgb(','rgba(').replace(')',',.18)');
-  document.body.style.setProperty('--sky-glow',glow);
-}
 function schedule(){
-  clearInterval(configTimer);clearInterval(weatherTimer);clearInterval(alertsTimer);clearTimeout(pageTimer);clearInterval(backgroundTimer);
+  clearInterval(configTimer);clearInterval(weatherTimer);clearInterval(alertsTimer);clearTimeout(pageTimer);
   configTimer=setInterval(()=>loadConfig(false),30*60*1000);
   weatherTimer=setInterval(refreshWeather,10*60*1000);
   alertsTimer=setInterval(refreshAlerts,5*60*1000);
-  backgroundTimer=setInterval(updateBackground,60*1000);
   pageTimer=setTimeout(()=>location.reload(),30*60*1000);
 }
 async function loadConfig(initial){
@@ -166,7 +124,6 @@ async function loadConfig(initial){
     config=JSON.parse(text);
     setVideo();
     startNotices(config);
-    updateBackground();
     if(initial){
       await Promise.allSettled([refreshWeather(),refreshAlerts()]);
       schedule();

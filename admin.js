@@ -100,7 +100,6 @@ function fill(c){
   setLocation({label:c.location?.label||'',latitude:c.location?.latitude,longitude:c.location?.longitude,timeZone:c.timeZone||'America/Denver'});
   $('youtubeUrl').value=c.youtubeUrl||'';
   $('showVideo').checked=c.showVideo!==false;
-  $('dynamicBackground').checked=c.dynamicBackground!==false;
   $('showNoticeManager').checked=c.showNoticeManager!==false;
   renderNotices();
 }
@@ -112,7 +111,6 @@ function build(){
     location:{label:selectedLocation?.label||'',latitude:selectedLocation?.latitude,longitude:selectedLocation?.longitude},
     youtubeUrl:$('youtubeUrl').value.trim(),
     showVideo:$('showVideo').checked,
-    dynamicBackground:$('dynamicBackground').checked,
     showNoticeManager:$('showNoticeManager').checked,
     notices:notices.filter(n=>n.message?.trim())
   };
