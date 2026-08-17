@@ -107,6 +107,9 @@ function build(){
   syncNotices();
   return {
     ...currentConfig,
+    schemaVersion:'3.2',
+    revision:(Number(currentConfig.revision)||0)+1,
+    updatedAt:new Date().toISOString(),
     timeZone:selectedLocation?.timeZone||'America/Denver',
     location:{label:selectedLocation?.label||'',latitude:selectedLocation?.latitude,longitude:selectedLocation?.longitude},
     youtubeUrl:$('youtubeUrl').value.trim(),

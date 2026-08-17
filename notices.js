@@ -1,5 +1,7 @@
 let index=0;
-let timer=null;
+let rotationTimer=null;
+let boundaryTimer=null;
+let currentConfig={};
 
 const escapeHtml=s=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
@@ -24,15 +26,76 @@ export function formatExpiration(value,timeZone){
   return`Expires ${date} · ${time}`;
 }
 
-export function startNotices(config){
-  clearInterval(timer);
-  index=0;
-  render(config);
-  timer=setInterval(()=>advance(config),10000);
+function displayMs(n){
+  const len=(n?.message||'').length;
+  const reading=7000+Math.ceil(len/40)*1800;
+  const urgent=(n?.priority==='urgent')?3500:(n?.priority==='important'?1500:0);
+  return Math.max(8000,Math.min(26000,reading+urgent));
 }
 
-function render(config){
-  const list=activeNotices(config);
+function nextBoundary(config){
+  const now=Date.now();
+  const times=[];
+  for(const n of config.notices||[]){
+    for(const k of ['start','expires']){
+      if(!n[k])continue;
+      const t=new Date(n[k]).getTime();
+      if(Number.isFinite(t)&&t>now)times.push(t);
+    }
+  }
+  return times.length?Math.min(...times):null;
+}
+
+export function startNotices(config){
+  currentConfig=config||{};
+  clearTimeout(rotationTimer);
+  clearTimeout(boundaryTimer);
+  index=0;
+  render();
+  scheduleRotation();
+  scheduleBoundary();
+}
+
+export function repositionNotices(){
+  requestAnimationFrame(position);
+}
+
+function scheduleRotation(){
+  clearTimeout(rotationTimer);
+  const list=activeNotices(currentConfig);
+  if(list.length<=1)return;
+  const active=list[Math.min(index,list.length-1)];
+  rotationTimer=setTimeout(()=>{
+    advance();
+    scheduleRotation();
+  },displayMs(active));
+}
+
+function scheduleBoundary(){
+  clearTimeout(boundaryTimer);
+  const next=nextBoundary(currentConfig);
+  if(!next)return;
+  boundaryTimer=setTimeout(()=>{
+    index=0;
+    render();
+    scheduleRotation();
+    scheduleBoundary();
+  },Math.max(250,next-Date.now()+100));
+}
+
+function fitNotice(el){
+  if(!el)return;
+  el.style.fontSize='';
+  const min=14;
+  let size=parseFloat(getComputedStyle(el).fontSize);
+  while(size>min&&(el.scrollHeight>el.clientHeight+2||el.scrollWidth>el.clientWidth+2)){
+    size-=1;
+    el.style.fontSize=`${size}px`;
+  }
+}
+
+function render(){
+  const list=activeNotices(currentConfig);
   const banner=document.getElementById('noticeBanner');
   const track=document.getElementById('noticeTrack');
   const count=document.getElementById('noticeCount');
@@ -49,30 +112,36 @@ function render(config){
   index=Math.min(index,list.length-1);
   banner.classList.add('active');
   track.innerHTML=list.map((n,i)=>`<div class="notice-item ${escapeHtml(n.priority||'normal')} ${i===index?'active':''}" data-index="${i}">${escapeHtml(n.message)}</div>`).join('');
-  requestAnimationFrame(()=>position());
+  requestAnimationFrame(()=>{
+    position();
+    fitNotice(track.querySelector('.notice-item.active'));
+  });
   count.textContent=list.length>1?`${index+1} of ${list.length}`:'';
-  exp.textContent=formatExpiration(list[index]?.expires,config.timeZone||'America/Denver');
+  exp.textContent=formatExpiration(list[index]?.expires,currentConfig.timeZone||'America/Denver');
 }
 
 function position(){
   const track=document.getElementById('noticeTrack');
   const items=[...track.querySelectorAll('.notice-item')];
   if(!items.length)return;
+  index=Math.min(index,items.length-1);
   const active=items[index];
   items.forEach((el,i)=>el.classList.toggle('active',i===index));
   const offset=-(active.offsetTop+active.offsetHeight/2);
   track.style.setProperty('--notice-offset',`${offset}px`);
 }
 
-function advance(config){
-  const list=activeNotices(config);
-  if(!list.length)return render(config);
+function advance(){
+  const list=activeNotices(currentConfig);
+  if(!list.length)return render();
   if(document.getElementById('noticeTrack').children.length!==list.length){
     index=0;
-    return render(config);
+    return render();
   }
   index=(index+1)%list.length;
   position();
+  const active=document.querySelector('.notice-item.active');
+  fitNotice(active);
   document.getElementById('noticeCount').textContent=list.length>1?`${index+1} of ${list.length}`:'';
-  document.getElementById('noticeExpiration').textContent=formatExpiration(list[index]?.expires,config.timeZone||'America/Denver');
+  document.getElementById('noticeExpiration').textContent=formatExpiration(list[index]?.expires,currentConfig.timeZone||'America/Denver');
 }

@@ -11,9 +11,11 @@
 <body>
   <div class="app" id="app">
     <div class="status-strip" aria-live="polite">
-      <span id="statusDot" class="status-dot"></span>
-      <span id="statusText">LIVE</span>
-      <span id="updatedText">Updated --:--</span>
+      <span class="health-item"><span id="configDot" class="health-dot"></span><span>CFG</span></span>
+      <span class="health-item"><span id="weatherDot" class="health-dot"></span><span>WX</span></span>
+      <span class="health-item"><span id="alertsDot" class="health-dot"></span><span>ALERTS</span></span>
+      <span class="health-item"><span id="videoDot" class="health-dot"></span><span>VIDEO</span></span>
+      <span id="updatedText" class="status-updated">Updated --:--</span>
     </div>
 
     <main class="hero">
@@ -35,7 +37,10 @@
             allow="autoplay; encrypted-media; picture-in-picture"
             allowfullscreen
             referrerpolicy="strict-origin-when-cross-origin"></iframe>
-          <div id="videoFallback" class="video-fallback">Information feed unavailable</div>
+          <div id="videoFallback" class="video-fallback">
+            <span>Communication</span>
+            <span>Center</span>
+          </div>
         </div>
       </section>
     </main>
@@ -86,6 +91,14 @@
       </section>
     </footer>
   </div>
+
+  <aside id="diagnostics" class="diagnostics" aria-hidden="true">
+    <div class="diagnostics-head">
+      <strong>Display Diagnostics</strong>
+      <span>Press D to close</span>
+    </div>
+    <dl id="diagnosticsGrid"></dl>
+  </aside>
 
   <script type="module" src="display.js"></script>
 </body>

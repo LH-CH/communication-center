@@ -8,5 +8,8 @@
   "youtubeUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
   "showVideo": true,
   "showNoticeManager": true,
-  "notices": []
+  "notices": [],
+  "schemaVersion": "3.2",
+  "revision": 1,
+  "updatedAt": "2026-08-17T20:00:00.000Z"
 }

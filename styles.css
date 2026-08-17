@@ -44,14 +44,17 @@ html,body{
   z-index:5;
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:clamp(10px,.8vw,15px);
   color:var(--text-muted);
-  font-size:clamp(11px,.72vw,14px);
+  font-size:clamp(10px,.66vw,13px);
   white-space:nowrap;
 }
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--success)}
-.status-strip.error .status-dot{background:var(--danger)}
-.status-strip.delayed .status-dot{background:var(--warning)}
+.health-item{display:inline-flex;align-items:center;gap:5px}
+.health-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted)}
+.health-dot.ok{background:var(--success)}
+.health-dot.delayed{background:var(--warning)}
+.health-dot.error{background:var(--danger)}
+.status-updated{margin-left:3px;color:var(--text-secondary)}
 
 .hero{
   display:grid;
@@ -112,9 +115,16 @@ html,body{
 .video-shell iframe{width:100%;height:100%;border:0;display:block}
 .video-fallback{
   position:absolute;inset:0;
-  display:none;align-items:center;justify-content:center;
-  color:var(--text-muted);
-  font-size:clamp(18px,1.2vw,24px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:2px;
+  color:var(--text-secondary);
+  font-size:clamp(30px,2.2vw,46px);
+  font-weight:600;
+  line-height:1.05;
+  text-align:center;
   background:var(--surface);
 }
 
@@ -243,3 +253,44 @@ html,body{
 @media(prefers-reduced-motion:reduce){
   *{transition:none!important}
 }
+
+
+/* Reliability / burn-in protection */
+.app{
+  transform:translate(var(--burn-x,0px),var(--burn-y,0px));
+  transition:transform 2s ease;
+}
+
+/* Hidden diagnostics overlay */
+.diagnostics{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:50;
+  width:min(480px,calc(100vw - 40px));
+  max-height:70vh;
+  overflow:auto;
+  display:none;
+  padding:16px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(3,16,31,.97);
+  box-shadow:0 18px 50px rgba(0,0,0,.4);
+  color:var(--text);
+}
+.diagnostics.open{display:block}
+.diagnostics-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  padding-bottom:10px;
+  margin-bottom:10px;
+  border-bottom:1px solid var(--border-subtle);
+}
+.diagnostics-head span{color:var(--text-muted);font-size:12px}
+.diagnostics dl{margin:0;display:grid;grid-template-columns:150px 1fr;gap:7px 12px;font-size:13px}
+.diagnostics dt{color:var(--text-muted)}
+.diagnostics dd{margin:0;color:var(--text-secondary);word-break:break-word}
+
+/* Prevent long alert / notice text from clipping. JS may also reduce font-size when needed. */
+.alert-title,.alert-detail,.notice-item{overflow-wrap:anywhere}

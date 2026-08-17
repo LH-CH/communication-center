@@ -1,5 +1,5 @@
-const WEATHER_CACHE='display-weather-v3';
-const ALERT_CACHE='display-alerts-v3';
+const WEATHER_CACHE='display-weather-v3.2';
+const ALERT_CACHE='display-alerts-v3.2';
 
 const ICONS={
   sun:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.42"/></svg>`,
@@ -16,9 +16,7 @@ const ICONS={
 };
 
 export function initMetricIcons(){
-  document.querySelectorAll('[data-icon]').forEach(el=>{
-    el.innerHTML=ICONS[el.dataset.icon]||'';
-  });
+  document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=ICONS[el.dataset.icon]||'');
 }
 export function iconFor(description=''){
   const s=description.toLowerCase();
@@ -31,19 +29,42 @@ export function iconFor(description=''){
   return ICONS.sun;
 }
 
-const fetchJson=async(url,timeout=12000)=>{
-  const c=new AbortController();
-  const t=setTimeout(()=>c.abort(),timeout);
-  try{
-    const r=await fetch(url,{headers:{Accept:'application/geo+json'},cache:'no-store',signal:c.signal});
-    if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);
-    return await r.json();
-  }finally{clearTimeout(t)}
-};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function fetchJson(url,{timeout=12000,attempts=3}={}){
+  let lastError;
+  for(let attempt=0;attempt<attempts;attempt++){
+    const c=new AbortController();
+    const t=setTimeout(()=>c.abort(),timeout);
+    try{
+      const r=await fetch(url,{headers:{Accept:'application/geo+json'},cache:'no-store',signal:c.signal});
+      if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);
+      return await r.json();
+    }catch(e){
+      lastError=e;
+      if(attempt<attempts-1)await sleep(1000*Math.pow(2,attempt));
+    }finally{
+      clearTimeout(t);
+    }
+  }
+  throw lastError;
+}
 
 const cToF=c=>Math.round(c*9/5+32);
 const kphToMph=k=>Math.round(k*.621371);
 const dir=d=>d==null?'--':['N','NE','E','SE','S','SW','W','NW'][Math.round(d/45)%8];
+
+function saveCache(key,data){
+  localStorage.setItem(key,JSON.stringify({savedAt:new Date().toISOString(),data}));
+}
+function readCache(key){
+  try{
+    const raw=JSON.parse(localStorage.getItem(key)||'null');
+    if(!raw)return null;
+    if(raw.data!==undefined)return raw;
+    return {savedAt:null,data:raw}; // backward compatibility
+  }catch{return null}
+}
 
 export async function getWeather(config){
   const lat=Number(config.location?.latitude);
@@ -51,8 +72,10 @@ export async function getWeather(config){
   if(!Number.isFinite(lat)||!Number.isFinite(lon))throw new Error('Location required');
 
   const point=await fetchJson(`https://api.weather.gov/points/${lat},${lon}`);
-  const hourly=await fetchJson(point.properties.forecastHourly);
-  const stations=await fetchJson(point.properties.observationStations);
+  const [hourly,stations]=await Promise.all([
+    fetchJson(point.properties.forecastHourly),
+    fetchJson(point.properties.observationStations)
+  ]);
   const station=stations?.features?.[0]?.properties?.stationIdentifier;
   const obs=station?await fetchJson(`https://api.weather.gov/stations/${station}/observations/latest`):null;
 
@@ -68,15 +91,12 @@ export async function getWeather(config){
     humidity:op.relativeHumidity?.value,
     updated:op.timestamp||new Date().toISOString()
   };
-  localStorage.setItem(WEATHER_CACHE,JSON.stringify(weather));
-  return {weather,cached:false};
+  saveCache(WEATHER_CACHE,weather);
+  return {weather,cached:false,savedAt:new Date().toISOString()};
 }
-
 export function getCachedWeather(){
-  try{
-    const raw=localStorage.getItem(WEATHER_CACHE);
-    return raw?{weather:JSON.parse(raw),cached:true}:null;
-  }catch{return null}
+  const c=readCache(WEATHER_CACHE);
+  return c?{weather:c.data,cached:true,savedAt:c.savedAt}:null;
 }
 
 export async function getAlerts(config){
@@ -84,12 +104,10 @@ export async function getAlerts(config){
   const lon=Number(config.location?.longitude);
   const d=await fetchJson(`https://api.weather.gov/alerts/active?point=${lat},${lon}&status=actual`);
   const alerts=(d.features||[]).map(f=>f.properties||{});
-  localStorage.setItem(ALERT_CACHE,JSON.stringify(alerts));
-  return {alerts,cached:false};
+  saveCache(ALERT_CACHE,alerts);
+  return {alerts,cached:false,savedAt:new Date().toISOString()};
 }
 export function getCachedAlerts(){
-  try{
-    const raw=localStorage.getItem(ALERT_CACHE);
-    return raw?{alerts:JSON.parse(raw),cached:true}:null;
-  }catch{return null}
+  const c=readCache(ALERT_CACHE);
+  return c?{alerts:c.data,cached:true,savedAt:c.savedAt}:null;
 }

@@ -1,35 +1,44 @@
-# Display v3.1 — Flat GitHub Build
+# Display v3.2 — Reliability Update
 
-Fresh flat-file rebuild using HTML, CSS, and JavaScript.
+Flat GitHub Pages build. Upload every file directly to the repository root.
 
-## This update
-- Enlarged the clock to better fill the left hero panel
-- Removed dynamic background completely
-- Removed Dynamic Background from Admin
-- Removed `dynamicBackground` from `config.json`
-- Removed all dynamic-background JavaScript and CSS
-- Standardized Admin and public display on one shared color palette
+## Added in v3.2
 
-## Shared palette
-- Background: #03101f
-- Surface: #07192b
-- Surface hover: #0b2136
-- Border: #1d3448
-- Subtle border: #142a3d
-- Primary text: #f4f7fb
-- Secondary text: #a9c6df
-- Muted text: #7596b3
-- Accent: #4da9dc
-- Accent hover: #65b9e5
-- Success: #4ade9b
-- Warning: #f6c453
-- Danger: #ef6b73
+- No periodic full-page reload: YouTube playback is no longer interrupted by scheduled refreshes
+- Health indicators for config, weather, alerts, and video
+- Cached/offline fallback for config, weather, and alerts
+- Exponential retry/backoff for NWS and config requests
+- Auto-fit protection for clock, alerts, weather condition text, and notices
+- Smarter notices:
+  - urgent/important priority ordering
+  - longer messages stay visible longer
+  - urgent messages get extra display time
+  - start/expiration boundaries refresh automatically
+- YouTube failure fallback displays:
+  - `Communication`
+  - `Center`
+- Subtle burn-in protection shifts the display by 1 pixel periodically
+- Hidden diagnostics panel: press `D`
+- Config versioning with `schemaVersion`, `revision`, and `updatedAt`
+- Config is applied only when its content changes
+- Last valid config is cached locally so the display can boot during a GitHub/network interruption
+- Online event triggers an immediate config recovery attempt
 
-## Fixed refresh schedule
-- Config check: 30 minutes
-- Full page reload: 30 minutes
-- Weather: 10 minutes
-- NWS alerts: 5 minutes
-- Notice rotation: 10 seconds
+## Background refresh schedule
 
-Upload all files directly to the repository root.
+- Config check: every 30 minutes
+- Weather: every 10 minutes
+- NWS alerts: every 5 minutes
+- Burn-in pixel shift: every 10 minutes
+- No forced full-page reload
+
+## Diagnostics
+
+Press `D` on the TV keyboard to show/hide diagnostics including:
+- config version/revision
+- last successful config/weather/alert updates
+- network/cache source
+- video state
+- viewport size
+- online/offline status
+- location/time zone
