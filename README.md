@@ -1,4 +1,4 @@
-# Display v3.3
+# Display v3.3.1
 
 Flat GitHub Pages build.
 
@@ -18,3 +18,8 @@ Flat GitHub Pages build.
 - Alerts every 5 minutes
 
 Upload all files directly to the GitHub repository root.
+
+## v3.3.1
+- Public TV display is locked to exactly 100vw × 100vh.
+- Vertical and horizontal page scrolling are disabled.
+- Burn-in movement is clipped inside the viewport so its 1px shift cannot create a scrollbar.
