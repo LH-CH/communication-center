@@ -293,3 +293,17 @@ Timing is now hard-coded:
 - notice rotation: every 10 seconds
 
 These values are no longer stored in `config.json`.
+
+
+## Admin v2.1
+
+The obsolete Notice rotation, Config check, and Page refresh fields have been completely removed from the HTML and JavaScript.
+
+Fixed timing:
+- Config check: 30 minutes
+- Full page reload: 30 minutes
+- Weather: 10 minutes
+- NWS alerts: 5 minutes
+- Notice rotation: 10 seconds
+
+`admin.html` now includes no-cache metadata and displays `v2.1` beside the subtitle so you can confirm the new file is deployed.

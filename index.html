@@ -843,18 +843,11 @@ function scheduleRefreshTimers(){
   clearInterval(alertsTimer);
   clearTimeout(pageRefreshTimer);
 
-  // Hard-coded maintenance schedule:
-  // config.json check: every 30 minutes
-  // full page refresh: every 30 minutes
-  // current weather: every 10 minutes
-  // active NWS alerts: every 5 minutes
+  // Fixed refresh schedule. These values are intentionally not configurable.
   configTimer=setInterval(()=>loadConfig(false),30*60*1000);
   weatherTimer=setInterval(()=>refreshWeather(false),10*60*1000);
   alertsTimer=setInterval(refreshAlerts,5*60*1000);
-
-  pageRefreshTimer=setTimeout(()=>{
-    location.reload();
-  },30*60*1000);
+  pageRefreshTimer=setTimeout(()=>location.reload(),30*60*1000);
 }
 
 window.addEventListener('resize',()=>{
