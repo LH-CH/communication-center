@@ -907,8 +907,8 @@ function updateDynamicBackground(force=false){
     return;
   }
 
-  const lat=CONFIG.location?.latitude;
-  const lon=CONFIG.location?.longitude;
+  const lat=Number(CONFIG.location?.latitude);
+  const lon=Number(CONFIG.location?.longitude);
   const tz=CONFIG.timeZone||'America/Denver';
 
   if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
@@ -925,42 +925,66 @@ function updateDynamicBackground(force=false){
   const nowMin=localMinutes(now,tz);
   const riseMin=localMinutes(rise,tz);
   const setMin=localMinutes(set,tz);
-  const transition=Math.max(30,Number(CONFIG.backgroundTransitionMinutes)||75);
+  const transition=Math.max(45,Number(CONFIG.backgroundTransitionMinutes)||90);
 
+  /* Deliberately restrained, but visibly different palettes. */
   const palettes={
-    night:{top:'#010611',bottom:'#020a17',glow:'#0b1c36'},
-    dawn:{top:'#14233a',bottom:'#3b2d45',glow:'#8b5d64'},
-    day:{top:'#07192b',bottom:'#0c2740',glow:'#2c6b89'},
-    dusk:{top:'#171f35',bottom:'#3a2339',glow:'#8d4f5d'}
+    night:{
+      top:'#01050d',
+      bottom:'#020916',
+      glow:'#07182b'
+    },
+    dawn:{
+      top:'#17243a',
+      bottom:'#352a42',
+      glow:'#8c6670'
+    },
+    day:{
+      top:'#0b2942',
+      bottom:'#103853',
+      glow:'#3a7e9c'
+    },
+    dusk:{
+      top:'#18263b',
+      bottom:'#442a40',
+      glow:'#9a5f6e'
+    }
   };
 
-  let from,to,t;
+  let from,to,t=0;
 
   if(nowMin<riseMin-transition){
-    from=to=palettes.night;t=0;
+    from=to=palettes.night;
   }else if(nowMin<riseMin){
-    from=palettes.night;to=palettes.dawn;
+    from=palettes.night;
+    to=palettes.dawn;
     t=(nowMin-(riseMin-transition))/transition;
   }else if(nowMin<riseMin+transition){
-    from=palettes.dawn;to=palettes.day;
+    from=palettes.dawn;
+    to=palettes.day;
     t=(nowMin-riseMin)/transition;
   }else if(nowMin<setMin-transition){
-    from=to=palettes.day;t=0;
+    from=to=palettes.day;
   }else if(nowMin<setMin){
-    from=palettes.day;to=palettes.dusk;
+    from=palettes.day;
+    to=palettes.dusk;
     t=(nowMin-(setMin-transition))/transition;
   }else if(nowMin<setMin+transition){
-    from=palettes.dusk;to=palettes.night;
+    from=palettes.dusk;
+    to=palettes.night;
     t=(nowMin-setMin)/transition;
   }else{
-    from=to=palettes.night;t=0;
+    from=to=palettes.night;
   }
 
   document.body.style.setProperty('--sky-top',mixColor(from.top,to.top,t));
   document.body.style.setProperty('--sky-bottom',mixColor(from.bottom,to.bottom,t));
 
   const glow=mixColor(from.glow,to.glow,t);
-  document.body.style.setProperty('--sky-glow',glow.replace('rgb(','rgba(').replace(')',',.16)'));
+  document.body.style.setProperty(
+    '--sky-glow',
+    glow.replace('rgb(','rgba(').replace(')',',.18)')
+  );
 }
 
 window.addEventListener('resize',()=>{
@@ -1359,35 +1383,99 @@ init();
 }
 </style>
 
+
 <style>
-/* Clock spacing refinement */
+/* ===== FINAL CLOCK LAYOUT ===== */
+
+/* Move the clock away from the left edge while retaining responsive sizing. */
+.clock-panel{
+  justify-content:flex-start !important;
+  padding-left:clamp(54px,4.8vw,104px) !important;
+  padding-right:clamp(22px,1.8vw,38px) !important;
+}
+
+.clock-wrap{
+  width:100% !important;
+  padding:0 !important;
+}
+
+/* Keep the clock as one unit, but give each glyph actual breathing room. */
 .time-row{
-  column-gap:clamp(10px,.8vw,18px);
+  justify-content:flex-start !important;
+  align-items:flex-start !important;
+  column-gap:clamp(18px,1.2vw,26px) !important;
+  overflow:visible;
 }
 
 #time{
-  letter-spacing:-.035em !important;
-  font-variant-numeric:tabular-nums;
-  font-feature-settings:"tnum" 1;
+  letter-spacing:.025em !important;
+  font-variant-numeric:tabular-nums !important;
+  font-feature-settings:"tnum" 1 !important;
+  line-height:.86 !important;
 }
 
+/* Seconds need their own spacing in addition to the main numeral spacing. */
 #seconds{
-  margin-left:clamp(10px,.75vw,16px) !important;
+  margin:.06em 0 0 clamp(18px,1.2vw,26px) !important;
 }
 
+/* Increase date legibility and align it with the clock block. */
 #date{
-  font-size:clamp(24px,2vw,38px) !important;
-  margin-top:clamp(28px,3.2vh,46px) !important;
-  letter-spacing:.005em;
+  margin-top:clamp(30px,3.4vh,50px) !important;
+  font-size:clamp(27px,2.15vw,41px) !important;
+  line-height:1.2 !important;
+  text-align:center !important;
+}
+
+/* ===== DYNAMIC BACKGROUND ===== */
+body{
+  --sky-top:#020916;
+  --sky-bottom:#020b18;
+  --sky-glow:rgba(101,199,247,.035);
+  background:
+    radial-gradient(circle at 18% 10%,var(--sky-glow),transparent 36%),
+    linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bottom) 100%) !important;
+}
+
+/* Give CSS custom properties smooth interpolation in browsers that support it. */
+@property --sky-top{
+  syntax:"<color>";
+  inherits:true;
+  initial-value:#020916;
+}
+@property --sky-bottom{
+  syntax:"<color>";
+  inherits:true;
+  initial-value:#020b18;
+}
+@property --sky-glow{
+  syntax:"<color>";
+  inherits:true;
+  initial-value:rgba(101,199,247,.035);
+}
+
+body{
+  transition:
+    --sky-top 60s linear,
+    --sky-bottom 60s linear,
+    --sky-glow 60s linear;
 }
 
 @media(max-width:1500px){
+  .clock-panel{
+    padding-left:clamp(38px,3.6vw,66px) !important;
+  }
+
   #time{
-    letter-spacing:-.025em !important;
+    letter-spacing:.03em !important;
+  }
+
+  #seconds{
+    margin-left:16px !important;
   }
 
   #date{
-    font-size:clamp(22px,1.9vw,34px) !important;
+    font-size:clamp(24px,2vw,35px) !important;
   }
 }
 </style>

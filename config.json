@@ -5,15 +5,22 @@
     "latitude": 48.197,
     "longitude": -114.315
   },
-  "youtubeUrl": "https://www.youtube.com/watch?v=J7ZrIDvqlic",
+  "youtubeUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
   "showVideo": true,
   "weatherRefreshMinutes": 10,
   "alertsRefreshMinutes": 5,
   "configRefreshSeconds": 30,
   "pageRefreshMinutes": 10,
   "noticeRotationSeconds": 10,
-  "notices": [],
+  "notices": [
+    {
+      "message": "",
+      "start": "",
+      "expires": "",
+      "priority": "normal"
+    }
+  ],
   "dynamicBackground": true,
-  "backgroundTransitionMinutes": 75,
-  "showNoticeManager": false
+  "backgroundTransitionMinutes": 90,
+  "showNoticeManager": true
 }

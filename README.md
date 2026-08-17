@@ -254,3 +254,15 @@ The Admin page now includes:
 - The token is never written to `config.json`, GitHub Pages files, or the repository
 
 Only enable persistent storage on a trusted device/browser profile.
+
+
+## Clock and background correction
+
+- Clock block moved farther from the left edge
+- Main time now uses positive letter spacing, so repeated digits such as `44` no longer touch
+- Seconds receive additional separation from the main minute digits
+- Date remains larger for TV viewing
+- Dynamic background is explicitly enabled
+- Day, dawn, dusk, and night palettes are now visibly distinct while remaining minimal
+- Background is recalculated every minute and immediately after configuration changes
+- Sunrise/sunset and saved display location determine the active palette
