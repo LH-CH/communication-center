@@ -37,11 +37,11 @@ Upload all files directly to the GitHub repository root.
 - Increased horizontal and vertical spacing for improved TV readability.
 - Current conditions and detail metrics now have more deliberate separation.
 
-## v3.3.6
-- Replaced the icon-heavy weather metric grid with three clean columns.
-- Layout:
+## v3.3.7
+- Repaired malformed footer markup that pushed Weather Alerts to the top of the page.
+- Restored Weather Alerts to the right side of the bottom information bar.
+- Increased secondary weather labels and values for TV readability.
+- Kept the clean three-column weather layout:
   - Wind / Sunrise
   - Humidity / Sunset
-  - Today High/Low / Precipitation
-- Removed decorative H/L/% metric icons.
-- Standardized label/value sizing and spacing for a more minimal TV-friendly UI.
+  - Today / Precipitation
