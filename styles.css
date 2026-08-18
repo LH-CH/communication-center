@@ -388,3 +388,8 @@ body{
 .weather-summary .high-low strong{color:var(--text-secondary);font-weight:600}
 .weather-summary .hl-label{color:var(--text-muted);font-size:.88em;font-weight:600}
 .weather-summary .hl-divider{color:var(--border);font-size:.8em}
+
+/* v3.3.4 weather detail grid */
+.weather-stats{grid-template-columns:repeat(4,minmax(0,1fr));column-gap:clamp(18px,1.8vw,34px);row-gap:clamp(14px,1.4vh,22px)}
+.stat-letter{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text-muted)}
+@media(max-width:1200px){.weather-stats{grid-template-columns:repeat(4,minmax(0,1fr));column-gap:14px}}

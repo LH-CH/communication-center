@@ -59,15 +59,7 @@
           <div id="weatherIcon" class="weather-icon" aria-hidden="true"></div>
           <div class="weather-primary">
             <div id="temperature" class="temperature">--°F</div>
-            <div class="weather-summary" aria-label="Current conditions and daily high and low">
-              <span id="condition" class="condition">Weather unavailable</span>
-              <span class="summary-divider">|</span>
-              <span class="high-low">
-                <span><span class="hl-label">H</span> <strong id="highTemp">--°</strong></span>
-                <span class="hl-divider">•</span>
-                <span><span class="hl-label">L</span> <strong id="lowTemp">--°</strong></span>
-              </span>
-            </div>
+            <div id="condition" class="condition">Weather unavailable</div>
           </div>
         </div>
 
@@ -79,6 +71,18 @@
           <div class="weather-stat">
             <span class="stat-icon" data-icon="humidity"></span>
             <div><span class="stat-label">Humidity</span><strong id="humidity">--%</strong></div>
+          </div>
+          <div class="weather-stat">
+            <span class="stat-icon stat-letter">H</span>
+            <div><span class="stat-label">High</span><strong id="highTemp">--°</strong></div>
+          </div>
+          <div class="weather-stat">
+            <span class="stat-icon stat-letter">L</span>
+            <div><span class="stat-label">Low</span><strong id="lowTemp">--°</strong></div>
+          </div>
+          <div class="weather-stat">
+            <span class="stat-icon stat-letter">%</span>
+            <div><span class="stat-label">Precipitation</span><strong id="precipitation">--%</strong></div>
           </div>
           <div class="weather-stat">
             <span class="stat-icon" data-icon="sunrise"></span>

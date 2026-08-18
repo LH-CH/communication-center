@@ -132,8 +132,9 @@ function renderWeather(w,cached,savedAt){
   $('weatherIcon').innerHTML=iconFor(w.description||'');
   $('wind').textContent=w.wind||'--';
   $('humidity').textContent=w.humidity==null?'--%':`${Math.round(w.humidity)}%`;
-  $('highTemp').textContent=w.highF==null?'--°':`${Math.round(w.highF)}°`;
-  $('lowTemp').textContent=w.lowF==null?'--°':`${Math.round(w.lowF)}°`;
+  if($('highTemp')) $('highTemp').textContent=w.highF==null?'--°':`${Math.round(w.highF)}°`;
+  if($('lowTemp')) $('lowTemp').textContent=w.lowF==null?'--°':`${Math.round(w.lowF)}°`;
+  if($('precipitation')) $('precipitation').textContent=w.precipPct==null?'--%':`${Math.round(w.precipPct)}%`;
 
   const stamp=w.updated||savedAt;
   const age=stamp?Date.now()-new Date(stamp).getTime():null;

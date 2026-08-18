@@ -86,8 +86,12 @@ export async function getWeather(config){
   const windKph=op.windSpeed?.value;
 
   const dailyPeriods=daily?.properties?.periods||[];
-  const firstDay=dailyPeriods.find(p=>p.isDaytime===true);
-  const firstNight=dailyPeriods.find(p=>p.isDaytime===false);
+  const now=Date.now();
+  const futurePeriods=dailyPeriods.filter(p=>new Date(p.endTime||p.startTime||0).getTime()>=now);
+  const firstDay=futurePeriods.find(p=>p.isDaytime===true)||dailyPeriods.find(p=>p.isDaytime===true);
+  const firstNight=futurePeriods.find(p=>p.isDaytime===false)||dailyPeriods.find(p=>p.isDaytime===false);
+  const precipValue=present?.probabilityOfPrecipitation?.value;
+  const precip=precipValue==null?null:Number(precipValue);
 
   const weather={
     tempF:tempC==null?present.temperature:cToF(tempC),
@@ -96,6 +100,7 @@ export async function getWeather(config){
     humidity:op.relativeHumidity?.value,
     highF:firstDay?.temperature ?? null,
     lowF:firstNight?.temperature ?? null,
+    precipPct:Number.isFinite(precip)?precip:null,
     updated:op.timestamp||new Date().toISOString()
   };
   saveCache(WEATHER_CACHE,weather);
