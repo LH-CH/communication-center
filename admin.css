@@ -79,3 +79,32 @@ textarea{min-height:84px;resize:vertical}
 .status-row span{
   color:var(--display-secondary) !important;
 }
+
+
+/* v3.3.9 — Admin color alignment */
+:root{
+  --weather-label:#9FC4E6;
+  --weather-value:#F4F7FB;
+  --weather-muted:#6F91AE;
+}
+
+label,
+.helper,
+.publish-meta span,
+.status-row span{
+  color:var(--weather-label) !important;
+}
+
+input,
+select,
+textarea,
+.selected-location strong,
+.status-row strong,
+.publish-meta strong{
+  color:var(--weather-value) !important;
+}
+
+.selected-location small,
+.remember-row small{
+  color:var(--weather-muted) !important;
+}

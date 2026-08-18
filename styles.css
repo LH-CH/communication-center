@@ -647,3 +647,61 @@ body{
 .today-range #lowTemp{
   color:var(--display-primary) !important;
 }
+
+
+/* v3.3.9 — final weather color hierarchy
+   Labels / conditions = soft blue
+   Values = white
+*/
+:root{
+  --weather-label:#9FC4E6;
+  --weather-value:#F4F7FB;
+  --weather-muted:#6F91AE;
+}
+
+/* Current condition */
+.condition{
+  color:var(--weather-label) !important;
+}
+
+/* Weather labels */
+.weather-group .stat-label,
+.weather-group.secondary .stat-label{
+  color:var(--weather-label) !important;
+  opacity:1 !important;
+}
+
+/* Weather values */
+.temperature,
+.weather-group strong,
+.weather-group.secondary strong,
+.today-range,
+.today-range #highTemp,
+.today-range #lowTemp,
+#wind,
+#humidity,
+#sunrise,
+#sunset,
+#precipitation{
+  color:var(--weather-value) !important;
+  opacity:1 !important;
+}
+
+/* Only separators/supporting details stay muted */
+.temp-range-divider{
+  color:var(--weather-muted) !important;
+}
+
+/* Alert hierarchy follows the same rule */
+.alert-title{
+  color:var(--weather-value) !important;
+}
+.alert-detail{
+  color:var(--weather-label) !important;
+}
+
+/* Status strip stays subtle, not competing with display content */
+.status-strip,
+.status-updated{
+  color:var(--weather-muted) !important;
+}

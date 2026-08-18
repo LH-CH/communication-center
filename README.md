@@ -53,3 +53,10 @@ Upload all files directly to the GitHub repository root.
 - Supporting/status text uses one muted blue-gray.
 - Sunrise, Sunset, and Precipitation no longer appear artificially dimmer than Wind, Humidity, and Today.
 - Admin supporting colors now use the same display palette.
+
+## v3.3.9
+- Finalized color consistency.
+- All weather labels and condition text use the same soft blue.
+- All weather values use the same bright white.
+- Only separators and low-priority status text remain muted.
+- Admin labels and values now follow the same hierarchy.
