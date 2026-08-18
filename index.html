@@ -72,13 +72,12 @@
             <span class="stat-icon" data-icon="humidity"></span>
             <div><span class="stat-label">Humidity</span><strong id="humidity">--%</strong></div>
           </div>
-          <div class="weather-stat">
-            <span class="stat-icon stat-letter">H</span>
-            <div><span class="stat-label">High</span><strong id="highTemp">--°</strong></div>
-          </div>
-          <div class="weather-stat">
-            <span class="stat-icon stat-letter">L</span>
-            <div><span class="stat-label">Low</span><strong id="lowTemp">--°</strong></div>
+          <div class="weather-stat high-low-stat">
+            <span class="stat-icon temp-range-icon">↕</span>
+            <div>
+              <span class="stat-label">High / Low</span>
+              <strong><span id="highTemp">--°</span><span class="temp-range-divider"> / </span><span id="lowTemp">--°</span></strong>
+            </div>
           </div>
           <div class="weather-stat">
             <span class="stat-icon stat-letter">%</span>

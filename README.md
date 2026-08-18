@@ -29,3 +29,10 @@ Upload all files directly to the GitHub repository root.
 - Format: `H 81° • L 54°`
 - High/low values come from the NWS daily forecast endpoint.
 - Styling remains secondary to the current temperature.
+
+## v3.3.5
+- Combined High and Low into one compact `High / Low` metric.
+- Removed separate H/L letter markers.
+- Rebalanced the weather details into a cleaner four-column grid.
+- Increased horizontal and vertical spacing for improved TV readability.
+- Current conditions and detail metrics now have more deliberate separation.

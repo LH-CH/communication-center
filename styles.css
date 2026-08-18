@@ -393,3 +393,90 @@ body{
 .weather-stats{grid-template-columns:repeat(4,minmax(0,1fr));column-gap:clamp(18px,1.8vw,34px);row-gap:clamp(14px,1.4vh,22px)}
 .stat-letter{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text-muted)}
 @media(max-width:1200px){.weather-stats{grid-template-columns:repeat(4,minmax(0,1fr));column-gap:14px}}
+
+
+/* v3.3.5 — weather detail spacing refinement */
+.weather-block{
+  grid-template-columns:minmax(320px,.82fr) minmax(620px,1.18fr);
+  gap:clamp(54px,4vw,88px);
+  padding-left:clamp(56px,4.2vw,86px);
+  padding-right:clamp(48px,3.8vw,78px);
+}
+
+/* Seven details become a balanced four-column grid with High/Low combined. */
+.weather-stats{
+  width:min(100%,760px);
+  grid-template-columns:repeat(4,minmax(128px,1fr));
+  column-gap:clamp(28px,2.6vw,52px);
+  row-gap:clamp(24px,2.4vh,34px);
+  justify-self:center;
+  place-content:center;
+}
+
+.weather-stat{
+  grid-template-columns:22px minmax(0,1fr);
+  column-gap:12px;
+  min-width:0;
+  align-items:center;
+}
+
+.stat-label{
+  white-space:nowrap;
+}
+
+.weather-stat strong{
+  white-space:nowrap;
+}
+
+.temp-range-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:21px;
+  height:21px;
+  color:var(--text-muted);
+  font-size:15px;
+  font-weight:600;
+  line-height:1;
+}
+
+.temp-range-divider{
+  color:var(--text-muted);
+  font-weight:400;
+}
+
+.high-low-stat strong{
+  letter-spacing:.01em;
+}
+
+/* Give current conditions a little more separation from the metrics. */
+.weather-summary{
+  padding-left:clamp(6px,.5vw,10px);
+}
+
+@media(max-width:1500px){
+  .weather-block{
+    grid-template-columns:minmax(270px,.78fr) minmax(520px,1.22fr);
+    gap:38px;
+    padding-left:38px;
+    padding-right:34px;
+  }
+
+  .weather-stats{
+    width:min(100%,680px);
+    grid-template-columns:repeat(4,minmax(112px,1fr));
+    column-gap:24px;
+    row-gap:20px;
+  }
+}
+
+@media(max-width:1100px){
+  .weather-block{
+    grid-template-columns:minmax(230px,.72fr) minmax(430px,1.28fr);
+    gap:26px;
+  }
+
+  .weather-stats{
+    grid-template-columns:repeat(3,minmax(110px,1fr));
+  }
+}
