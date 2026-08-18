@@ -348,3 +348,43 @@ body{
   max-width:100%;
   max-height:100%;
 }
+
+/* v3.3.2 — compact daily high / low */
+.high-low{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:9px;
+  color:var(--text-muted);
+  font-size:clamp(14px,.9vw,17px);
+  line-height:1;
+  letter-spacing:.01em;
+}
+.high-low > span{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+}
+.high-low strong{
+  color:var(--text-secondary);
+  font-weight:600;
+}
+.hl-label{
+  color:var(--text-muted);
+  font-size:.88em;
+  font-weight:600;
+}
+.hl-divider{
+  color:var(--border);
+  font-size:.8em;
+}
+
+/* v3.3.3 — single-line weather summary */
+.weather-summary{display:flex;align-items:center;flex-wrap:nowrap;gap:9px;margin-top:6px;min-width:0;white-space:nowrap}
+.weather-summary .condition{margin:0;min-width:0;color:var(--text-secondary)}
+.summary-divider{color:var(--border);font-size:.9em;font-weight:400}
+.weather-summary .high-low{display:inline-flex;align-items:center;flex:0 0 auto;gap:8px;margin:0;color:var(--text-muted);font-size:clamp(14px,.9vw,17px);line-height:1}
+.weather-summary .high-low>span{display:inline-flex;align-items:center;gap:3px}
+.weather-summary .high-low strong{color:var(--text-secondary);font-weight:600}
+.weather-summary .hl-label{color:var(--text-muted);font-size:.88em;font-weight:600}
+.weather-summary .hl-divider{color:var(--border);font-size:.8em}

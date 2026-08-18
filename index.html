@@ -59,7 +59,15 @@
           <div id="weatherIcon" class="weather-icon" aria-hidden="true"></div>
           <div class="weather-primary">
             <div id="temperature" class="temperature">--°F</div>
-            <div id="condition" class="condition">Weather unavailable</div>
+            <div class="weather-summary" aria-label="Current conditions and daily high and low">
+              <span id="condition" class="condition">Weather unavailable</span>
+              <span class="summary-divider">|</span>
+              <span class="high-low">
+                <span><span class="hl-label">H</span> <strong id="highTemp">--°</strong></span>
+                <span class="hl-divider">•</span>
+                <span><span class="hl-label">L</span> <strong id="lowTemp">--°</strong></span>
+              </span>
+            </div>
           </div>
         </div>
 

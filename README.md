@@ -23,3 +23,9 @@ Upload all files directly to the GitHub repository root.
 - Public TV display is locked to exactly 100vw × 100vh.
 - Vertical and horizontal page scrolling are disabled.
 - Burn-in movement is clipped inside the viewport so its 1px shift cannot create a scrollbar.
+
+## v3.3.2
+- Added compact daily high/low beneath the current weather condition.
+- Format: `H 81° • L 54°`
+- High/low values come from the NWS daily forecast endpoint.
+- Styling remains secondary to the current temperature.

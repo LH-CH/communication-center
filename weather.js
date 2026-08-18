@@ -72,8 +72,9 @@ export async function getWeather(config){
   if(!Number.isFinite(lat)||!Number.isFinite(lon))throw new Error('Location required');
 
   const point=await fetchJson(`https://api.weather.gov/points/${lat},${lon}`);
-  const [hourly,stations]=await Promise.all([
+  const [hourly,daily,stations]=await Promise.all([
     fetchJson(point.properties.forecastHourly),
+    fetchJson(point.properties.forecast),
     fetchJson(point.properties.observationStations)
   ]);
   const station=stations?.features?.[0]?.properties?.stationIdentifier;
@@ -84,11 +85,17 @@ export async function getWeather(config){
   const tempC=op.temperature?.value;
   const windKph=op.windSpeed?.value;
 
+  const dailyPeriods=daily?.properties?.periods||[];
+  const firstDay=dailyPeriods.find(p=>p.isDaytime===true);
+  const firstNight=dailyPeriods.find(p=>p.isDaytime===false);
+
   const weather={
     tempF:tempC==null?present.temperature:cToF(tempC),
     description:op.textDescription||present.shortForecast||'Weather unavailable',
     wind:windKph==null?`${present.windSpeed||'--'} ${present.windDirection||''}`.trim():`${kphToMph(windKph)} mph ${dir(op.windDirection?.value)}`,
     humidity:op.relativeHumidity?.value,
+    highF:firstDay?.temperature ?? null,
+    lowF:firstNight?.temperature ?? null,
     updated:op.timestamp||new Date().toISOString()
   };
   saveCache(WEATHER_CACHE,weather);
