@@ -602,3 +602,48 @@ body{
     font-size:23px !important;
   }
 }
+
+
+/* v3.3.8 — unified public display color hierarchy
+   Primary values = bright white
+   Labels/supporting text = one consistent soft blue
+   Muted/separators = one consistent subdued blue-gray
+*/
+:root{
+  --display-primary:#F4F7FB;
+  --display-secondary:#9FC4E6;
+  --display-muted:#6F91AE;
+}
+
+.temperature,
+.weather-group strong,
+.alert-title{
+  color:var(--display-primary) !important;
+}
+
+.condition,
+.weather-group .stat-label,
+.weather-group.secondary .stat-label,
+.weather-group.secondary strong{
+  color:var(--display-secondary) !important;
+}
+
+.temp-range-divider,
+.status-updated,
+.status-item,
+.alert-detail{
+  color:var(--display-muted) !important;
+}
+
+/* Keep all six secondary weather groups visually equal.
+   Sunrise/Sunset/Precipitation should not appear dimmer than the top row. */
+.weather-group.secondary{
+  opacity:1 !important;
+}
+
+/* Preserve hierarchy within Today's high/low value. */
+.today-range,
+.today-range #highTemp,
+.today-range #lowTemp{
+  color:var(--display-primary) !important;
+}

@@ -64,3 +64,18 @@ textarea{min-height:84px;resize:vertical}
 .notice-row,.notice-card{transition:border-color .15s ease,background .15s ease}
 .notice-status{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--border);border-radius:999px;color:var(--text-secondary);font-size:11px}
 @media(max-width:900px){.status-grid{grid-template-columns:1fr 1fr}}
+
+
+/* v3.3.8 — align Admin accent/text colors with public display */
+:root{
+  --display-primary:#F4F7FB;
+  --display-secondary:#9FC4E6;
+  --display-muted:#6F91AE;
+}
+.helper,
+.publish-meta span{
+  color:var(--display-muted) !important;
+}
+.status-row span{
+  color:var(--display-secondary) !important;
+}

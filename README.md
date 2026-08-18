@@ -45,3 +45,11 @@ Upload all files directly to the GitHub repository root.
   - Wind / Sunrise
   - Humidity / Sunset
   - Today / Precipitation
+
+## v3.3.8
+- Unified weather colors into a simple three-level hierarchy.
+- Values use the same bright white.
+- All weather labels use the same soft blue.
+- Supporting/status text uses one muted blue-gray.
+- Sunrise, Sunset, and Precipitation no longer appear artificially dimmer than Wind, Humidity, and Today.
+- Admin supporting colors now use the same display palette.
