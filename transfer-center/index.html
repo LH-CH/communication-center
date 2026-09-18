@@ -31,13 +31,12 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
 <main class="app">
   <section class="header">
     <h1>Transfer Center Rollover</h1>
-    <div class="script">Communication Center, this is <span id="scriptName">__________</span> answering for the Transfer Center. The RN is currently on another call. I’ll ask you a few quick questions.</div>
+    <div class="script">Communication Center, this is [Your Name] answering for the Transfer Center. The RN is currently on another call. I’ll ask you a few quick questions.</div>
   </section>
 
   <div class="grid">
     <section class="card">
       <h2>CALL INFORMATION</h2>
-      <div class="field"><label for="operator">Your Name</label><input id="operator" autocomplete="off" placeholder="Name"></div>
       <div class="field"><label for="type">Call Type</label>
         <select id="type"><option value="">Select...</option><option>STROKE</option><option>TRAUMA</option><option>STEMI</option></select>
       </div>
@@ -46,76 +45,75 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
       <div class="field"><label for="callback">Callback Number</label><input id="callback" type="tel" autocomplete="off"></div>
       <div class="field"><label for="patient">Patient Name</label><input id="patient" autocomplete="off"></div>
       <div class="field"><label for="dob">Date of Birth</label><input id="dob" autocomplete="off" placeholder="MM/DD/YYYY"></div>
-      <div class="field"><label for="reason">Chief Complaint / Reason for Call</label><textarea id="reason"></textarea></div>
+      <div class="field"><label for="reason">Message</label><textarea id="reason"></textarea></div>
       <div class="actions"><button class="secondary" id="clear">Clear / New Call</button></div>
-      <div class="footer-note">Form entries remain in this browser page only. This version does not save call information or statistics.</div>
+      <div class="footer-note">Form entries remain in this browser page only. This version does not save call information.</div>
     </section>
 
     <section>
       <div class="card">
-        <h2>VOALTE MESSAGE</h2>
-        <textarea id="output" class="copybox" readonly></textarea>
-        <div class="actions"><button id="copy">Copy Message</button></div>
-        <div id="copyStatus" class="status"></div>
+        <h2>DYNAMIC WORKFLOW</h2>
+        <div id="noneFlow" class="notice">Select STROKE, TRAUMA, or STEMI to display the workflow.</div>
+
+        <div id="strokeFlow" class="hidden">
+          <h3>STROKE</h3>
+          <div class="field">
+            <label>Last Known Normal less than 24 hours?</label>
+            <div class="row">
+              <button type="button" class="choice" data-lkn="YES">YES</button>
+              <button type="button" class="choice" data-lkn="NO">NO</button>
+            </div>
+          </div>
+          <div id="strokeYes" class="notice hidden">
+            <strong>Next actions</strong>
+            <ol class="steps">
+              <li>Connect caller to Neurologist on call (<a href="http://kal-spokweb/Amcom/AmcomWeb/" target="_blank" rel="noopener">AMCOM On Call</a>).</li>
+              <li>Send Voalte to the Neurologist and Transfer Center RN with the information obtained.</li>
+            </ol>
+          </div>
+          <div id="strokeNo" class="notice hidden">
+            <strong>LKN ≥ 24 hours / NO</strong><br>
+            Send the Voalte message to Transfer Center RN with the information obtained.
+          </div>
+        </div>
+
+        <div id="traumaFlow" class="hidden">
+          <h3>TRAUMA</h3>
+          <div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div>
+        </div>
+
+        <div id="stemiFlow" class="hidden">
+          <h3>STEMI</h3>
+          <div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div>
+        </div>
 
         <div class="workflow">
-          <h2>DYNAMIC WORKFLOW</h2>
-          <div id="noneFlow" class="notice">Select STROKE, TRAUMA, or STEMI to display the workflow.</div>
-
-          <div id="strokeFlow" class="hidden">
-            <h3>STROKE</h3>
-            <div class="field">
-              <label>Last Known Normal less than 24 hours?</label>
-              <div class="row">
-                <button type="button" class="choice" data-lkn="YES">YES</button>
-                <button type="button" class="choice" data-lkn="NO">NO</button>
-              </div>
-            </div>
-            <div id="strokeYes" class="notice hidden">
-              <strong>Next actions</strong>
-              <ol class="steps">
-                <li>Contact Neurology (AMCOM On Call) and connect caller to provider.</li>
-                <li>Send Voalte to the Neurologist and Transfer Center RN with the information obtained.</li>
-              </ol>
-            </div>
-            <div id="strokeNo" class="notice hidden">
-              <strong>LKN ≥ 24 hours / NO</strong><br>
-              The supplied workflow does not specify the next action for this branch. Follow the current Transfer Center procedure.
-            </div>
-          </div>
-
-          <div id="traumaFlow" class="hidden">
-            <h3>TRAUMA</h3>
-            <div class="notice"><strong>Next action:</strong> Send the Voalte message with the information obtained.</div>
-          </div>
-
-          <div id="stemiFlow" class="hidden">
-            <h3>STEMI</h3>
-            <div class="notice"><strong>Next action:</strong> Send the Voalte message with the information obtained.</div>
-          </div>
+          <h2>VOALTE MESSAGE</h2>
+          <textarea id="output" class="copybox" readonly></textarea>
+          <div class="actions"><button id="copy">Copy Message</button></div>
+          <div id="copyStatus" class="status"></div>
         </div>
       </div>
     </section>
   </div>
 </main>
 <script>
-const ids=["operator","type","caller","facility","callback","patient","dob","reason"];
+const ids=["type","caller","facility","callback","patient","dob","reason"];
 const $=id=>document.getElementById(id);
 let lkn="";
 
 function val(id){return $(id).value.trim()}
 function generate(){
-  $("scriptName").textContent=val("operator") || "__________";
   const type=val("type");
   const lines=[];
   if(type) lines.push(type+" – Transfer Center Rollover","");
   lines.push(
     "Caller: "+val("caller"),
-    "Sending Fac: "+val("facility"),
+    "Sending Facility: "+val("facility"),
     "Callback: "+val("callback"),
     "Patient: "+val("patient"),
     "DOB: "+val("dob"),
-    "Reason: "+val("reason")
+    "Message: "+val("reason")
   );
   if(type==="STROKE" && lkn) lines.push("LKN <24 hrs: "+lkn);
   $("output").value=lines.join("\n");
@@ -129,7 +127,17 @@ function showFlow(type){
   if(type==="STEMI") $("stemiFlow").classList.remove("hidden");
 }
 ids.forEach(id=>$(id).addEventListener(id==="type"?"change":"input",()=>{
-  if(id==="type" && val("type")!=="STROKE"){lkn=""; document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active")); $("strokeYes").classList.add("hidden"); $("strokeNo").classList.add("hidden")}
+  if(id==="type"){
+    const t=val("type");
+    if(t!=="STROKE"){
+      lkn="";
+      document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active"));
+      $("strokeYes").classList.add("hidden"); $("strokeNo").classList.add("hidden");
+      $("reason").value = t ? "Request callback for " + t : "";
+    } else if(/^Request callback for (TRAUMA|STEMI)$/.test($("reason").value)){
+      $("reason").value="";
+    }
+  }
   generate();
 }));
 document.querySelectorAll("[data-lkn]").forEach(btn=>btn.addEventListener("click",()=>{
