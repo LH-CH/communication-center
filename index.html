@@ -1,247 +1,121 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Transfer Center Rollover</title>
-<style>
-:root{--bg:#eef4f8;--panel:#fff;--ink:#17232d;--muted:#61717e;--line:#d8e2e8;--blue:#2d6f98;--soft:#e8f2f8;--danger:#a43d3d;--ok:#26734d;--input:#fff;--output:#f8fafb}
-html[data-theme="dark"]{--bg:#0d141a;--panel:#151e25;--ink:#edf4f7;--muted:#a9bac5;--line:#2c3a43;--blue:#4d9dcc;--soft:#1c303c;--danger:#dc7777;--ok:#73c79a;--input:#10181e;--output:#10181e}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-.app{max-width:1400px;margin:auto;padding:20px}.header{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:16px}
-.header{position:relative}.header h1{margin:0 0 8px;font-size:20px}.theme-toggle{position:absolute;right:18px;top:16px;background:var(--soft);color:var(--ink);border:1px solid var(--line);padding:8px 12px}.script{font-size:18px;font-weight:600}
-.grid{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr);gap:16px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}.card h2{font-size:15px;letter-spacing:.06em;margin:0 0 16px;color:var(--muted)}
-label{display:block;font-weight:650;margin:0 0 6px}.field{margin-bottom:14px}
-input,select,textarea{width:100%;border:1px solid #b9c8d1;border-radius:8px;padding:11px 12px;font:inherit;background:var(--input);color:var(--ink)}
-input:focus,select:focus,textarea:focus{outline:3px solid #d8ebf6;border-color:var(--blue)}
-textarea{resize:vertical;min-height:82px}.copybox{min-height:190px;background:var(--output);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-.row{display:flex;gap:10px}.row>*{flex:1}
-button{border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}
-button.secondary{background:var(--soft);color:var(--ink)}button.danger{background:#b42318;color:#fff}button.danger:hover{background:#8f1c13}button.choice{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
-button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap:10px;margin-top:10px}
-.workflow{margin-top:16px;border-top:1px solid var(--line);padding-top:18px}.workflow h3{margin:0 0 10px}
-.notice{background:var(--soft);border-left:4px solid var(--blue);padding:12px 14px;border-radius:6px;margin:10px 0}
-.steps{margin:10px 0 0;padding-left:22px}.hidden{display:none!important}.status{font-size:13px;color:var(--ok);min-height:20px;margin-top:7px}
-.helper{font-size:12px;color:var(--muted);margin-top:5px}.footer-note{font-size:12px;color:var(--muted);margin-top:14px}
-.combo{position:relative}.combo-list{position:absolute;z-index:50;left:0;right:0;top:100%;margin-top:4px;max-height:260px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,.25)}
-.combo-option{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--line)}.combo-option:last-child{border-bottom:0}.combo-option:hover,.combo-option.active{background:var(--soft)}.combo-empty{padding:10px 12px;color:var(--muted)}
-@media(max-width:850px){.grid{grid-template-columns:1fr}.app{padding:10px}.script{font-size:16px}}
-@media print{.actions,.footer-note{display:none}body{background:#fff}.app{max-width:none}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta name="theme-color" content="#020916">
+  <title>Display</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<main class="app">
-  <section class="header">
-    <h1>Transfer Center Rollover</h1><button id="themeToggle" class="theme-toggle" type="button">☀ Light Mode</button>
-    <div class="script">Communication Center, this is [Your Name] answering for the Transfer Center. The RN is currently on another call. I’ll ask you a few quick questions.</div>
-  </section>
+  <div class="app" id="app">
+    <div class="status-strip" aria-live="polite">
+      <span class="health-item"><span id="configDot" class="health-dot"></span><span>CFG</span></span>
+      <span class="health-item"><span id="weatherDot" class="health-dot"></span><span>WX</span></span>
+      <span class="health-item"><span id="alertsDot" class="health-dot"></span><span>ALERTS</span></span>
+      <span class="health-item"><span id="videoDot" class="health-dot"></span><span>VIDEO</span></span>
+      <span id="updatedText" class="status-updated">Updated --:--</span>
+    </div>
 
-  <div class="grid">
-    <section class="card">
-      <h2>CALL INFORMATION</h2>
-      <div class="field"><label for="type">Call Type</label>
-        <select id="type"><option value="">Select...</option><option>STROKE</option><option>TRAUMA</option><option>STEMI</option><option>Other</option></select>
-      </div>
-      <div class="field"><label for="caller">Caller Name</label><input id="caller" autocomplete="off"></div>
-      <div class="field"><label for="facility">Sending Facility</label>
-        <div class="combo">
-          <input id="facility" autocomplete="off" placeholder="Type to search facilities..." role="combobox" aria-autocomplete="list" aria-expanded="false">
-          <div id="facilityList" class="combo-list hidden" role="listbox"></div>
+    <main class="hero">
+      <section class="clock-panel">
+        <div class="clock-block">
+          <div class="time-line">
+            <span id="timeMain">00:00</span>
+            <span id="timeSeconds">00</span>
+          </div>
+          <div id="dateText" class="date-text">Loading date…</div>
         </div>
-        <input id="facilityOther" class="hidden" autocomplete="off" placeholder="Enter sending facility" style="margin-top:8px">
+      </section>
+
+      <section class="video-panel">
+        <div class="video-shell">
+          <iframe
+            id="videoFrame"
+            title="Information Feed"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          <div id="videoFallback" class="video-fallback">
+            <span>Communication</span>
+            <span>Center</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section id="noticeBanner" class="notice-banner" aria-live="polite">
+      <div class="notice-mask">
+        <div id="noticeTrack" class="notice-track"></div>
       </div>
-      <div class="field"><label for="callback">Callback Number</label><input id="callback" type="tel" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="000-000-0000"><div class="helper">Include additional contact preferences in the Message field.</div></div>
-      <div class="field"><label for="patient">Patient Name</label><input id="patient" autocomplete="off"></div>
-      <div class="field"><label for="dob">Date of Birth</label><input id="dob" autocomplete="off" inputmode="numeric" maxlength="10" placeholder="00/00/0000"></div>
-      <div class="field"><label for="reason">Message</label><textarea id="reason"></textarea><div class="helper">Keep the message minimal and brief.</div></div>
-      <div class="actions"><button class="danger" id="clear">Clear / New Call</button></div>
-      <div class="footer-note">Form entries remain in this browser page only. This version does not save call information.</div>
+      <div id="noticeExpiration" class="notice-expiration"></div>
+      <div id="noticeCount" class="notice-count"></div>
     </section>
 
-    <section>
-      <div class="card">
-        <h2>DYNAMIC WORKFLOW</h2>
-        <div id="noneFlow" class="notice">Select STROKE, TRAUMA, or STEMI to display the workflow.</div>
+    <footer class="info-bar">
+      <section class="weather-block">
+        <div class="weather-summary">
+          <div id="weatherIcon" class="weather-icon" aria-hidden="true"></div>
+          <div class="weather-primary">
+            <div id="temperature" class="temperature">--°F</div>
+            <div id="condition" class="condition">Weather unavailable</div>
+          </div>
+        </div>
 
-        <div id="strokeFlow" class="hidden">
-          <h3>STROKE</h3>
-          <div class="field">
-            <label>Last Known Normal less than 24 hours?</label>
-            <div class="row">
-              <button type="button" class="choice" data-lkn="YES">YES</button>
-              <button type="button" class="choice" data-lkn="NO">NO</button>
+        <div class="weather-stats clean-weather-grid">
+          <div class="weather-column">
+            <div class="weather-group">
+              <span class="stat-label">Wind</span>
+              <strong id="wind">--</strong>
+            </div>
+            <div class="weather-group secondary">
+              <span class="stat-label">Sunrise</span>
+              <strong id="sunrise">--:--</strong>
             </div>
           </div>
-          <div id="strokeYes" class="notice hidden">
-            <strong>Next actions</strong>
-            <ol class="steps">
-              <li>Connect caller to Neurologist on call (<a href="http://kal-spokweb/Amcom/AmcomWeb/" target="_blank" rel="noopener">AMCOM On Call</a>).</li>
-              <li>Send Voalte to the Neurologist and Transfer Center RN with the information obtained.</li>
-            </ol>
+
+          <div class="weather-column">
+            <div class="weather-group">
+              <span class="stat-label">Humidity</span>
+              <strong id="humidity">--%</strong>
+            </div>
+            <div class="weather-group secondary">
+              <span class="stat-label">Sunset</span>
+              <strong id="sunset">--:--</strong>
+            </div>
           </div>
-          <div id="strokeNo" class="notice hidden">
-            <strong>LKN ≥ 24 hours / NO</strong><br>
-            Send the Voalte message to Transfer Center RN with the information obtained.
+
+          <div class="weather-column">
+            <div class="weather-group">
+              <span class="stat-label">Today</span>
+              <strong class="today-range"><span id="highTemp">--°</span><span class="temp-range-divider"> / </span><span id="lowTemp">--°</span></strong>
+            </div>
+            <div class="weather-group secondary">
+              <span class="stat-label">Precipitation</span>
+              <strong id="precipitation">--%</strong>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div id="traumaFlow" class="hidden">
-          <h3>TRAUMA</h3>
-          <div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div>
+      <section class="alerts-block">
+        <div id="alerts" class="alerts">
+          <div class="alert-title">Checking weather alerts…</div>
+          <div class="alert-detail"></div>
         </div>
-
-        <div id="stemiFlow" class="hidden">
-          <h3>STEMI</h3>
-          <div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div>
-        </div>
-        <div id="otherFlow" class="hidden"><h3>OTHER</h3><div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div></div>
-
-        <div class="workflow">
-          <h2>VOALTE MESSAGE</h2>
-          <textarea id="output" class="copybox" readonly></textarea>
-          <div class="actions"><button id="copy">Copy Message</button></div>
-          <div id="copyStatus" class="status"></div>
-        </div>
-      </div>
-    </section>
+      </section>
+    </footer>
   </div>
-</main>
-<script>
-const ids=["type","caller","facility","facilityOther","callback","patient","dob","reason"];
-const $=id=>document.getElementById(id);
-let lkn="";
 
-function val(id){
-  if(id==="facility" && ($("facility").dataset.value==="Other" || $("facility").dataset.value==="Clinic (enter name below)"))
-    return $("facilityOther").value.trim();
-  return $(id).value.trim();
-}
+  <aside id="diagnostics" class="diagnostics" aria-hidden="true">
+    <div class="diagnostics-head">
+      <strong>Display Diagnostics</strong>
+      <span>Press D to close</span>
+    </div>
+    <dl id="diagnosticsGrid"></dl>
+  </aside>
 
-const facilities=[
-"Anaconda-Community Hospital of Anaconda","Brendan House","Bozeman-Bozeman Health Deaconess Hospital",
-"Bonner's Ferry-Boundary Community Hospital","Browning-Blackfeet Community Hospital","Butte-St. James' Hospital",
-"Clinic (enter name below)","Chester Logan Health","Conrad Logan Health","Cutbank Logan Health",
-"Deer Lodge Medical Center","Dillon-Barrett Hospital","Eureka Logan Health Primary Care","Fort Harrison-VA",
-"Glasgow-Frances Mahon Deaconess Hospital","Great Falls-Benefis","Great Falls Clinic",
-"Hamilton-Bitteroot Health Daly Hospital","Havre-Northern Montana Hospital","Helena-St. Peter's Healthcare",
-"Kalispell-Logan Health","Libby-Cabinet Peaks Medical Center","Lewistown-Central Montana Hospital",
-"Missoula-Community Medical Center","Missoula-St. Patrick's Providence","Plains-Clark Fork Valley Hospital",
-"Polson-St. Joseph's Hospital","Red Lodge-Beartooth Billings Clinic","Ronan-St. Luke's Medical Center",
-"Shelby-Logan Health","Superior-Mineral Community Hospital","Whitefish-Logan Health","Other"
-];
-let facilityMatches=[], facilityActive=-1;
-function facilitySearch(q){
-  const terms=q.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  return facilities.filter(f=>terms.every(t=>f.toLowerCase().includes(t)));
-}
-function renderFacilities(){
-  facilityMatches=facilitySearch($("facility").value); facilityActive=-1;
-  const list=$("facilityList"); list.innerHTML="";
-  if(!facilityMatches.length){list.innerHTML='<div class="combo-empty">No matches — choose Other for manual entry.</div>';}
-  facilityMatches.forEach((f,i)=>{
-    const d=document.createElement("div"); d.className="combo-option"; d.textContent=f; d.setAttribute("role","option");
-    d.addEventListener("mousedown",e=>{e.preventDefault();selectFacility(f)}); list.appendChild(d);
-  });
-  list.classList.remove("hidden"); $("facility").setAttribute("aria-expanded","true");
-}
-function selectFacility(f){
-  $("facility").value=f; $("facility").dataset.value=f;
-  $("facilityList").classList.add("hidden"); $("facility").setAttribute("aria-expanded","false");
-  const manual=f==="Other"||f==="Clinic (enter name below)";
-  $("facilityOther").classList.toggle("hidden",!manual);
-  if(!manual)$("facilityOther").value="";
-  generate(); if(manual)$("facilityOther").focus();
-}
-$("facility").addEventListener("focus",renderFacilities);
-$("facility").addEventListener("input",()=>{$("facility").dataset.value="";$("facilityOther").classList.add("hidden");renderFacilities();generate()});
-$("facility").addEventListener("keydown",e=>{
-  const opts=[...$("facilityList").querySelectorAll(".combo-option")];
-  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();facilityActive=Math.max(0,Math.min(opts.length-1,facilityActive+(e.key==="ArrowDown"?1:-1)));opts.forEach((o,i)=>o.classList.toggle("active",i===facilityActive));opts[facilityActive]?.scrollIntoView({block:"nearest"});}
-  if(e.key==="Enter"&&facilityActive>=0){e.preventDefault();selectFacility(facilityMatches[facilityActive]);}
-  if(e.key==="Escape"){$("facilityList").classList.add("hidden");}
-});
-document.addEventListener("click",e=>{if(!e.target.closest(".combo"))$("facilityList").classList.add("hidden")});
-
-function generate(){
-  const type=val("type");
-  const lines=[];
-  if(type) lines.push(type+" – Transfer Center Rollover","");
-  lines.push(
-    "Caller: "+val("caller"),
-    "Sending Facility: "+val("facility"),
-    "Callback: "+val("callback"),
-    "Patient: "+val("patient"),
-    "DOB: "+val("dob"),
-    "Message: "+val("reason")
-  );
-  if(type==="STROKE" && lkn) lines.push("LKN <24 hrs: "+lkn);
-  $("output").value=lines.join("\n");
-  showFlow(type);
-}
-function showFlow(type){
-  ["noneFlow","strokeFlow","traumaFlow","stemiFlow","otherFlow"].forEach(x=>$(x).classList.add("hidden"));
-  if(!type) $("noneFlow").classList.remove("hidden");
-  if(type==="STROKE") $("strokeFlow").classList.remove("hidden");
-  if(type==="TRAUMA") $("traumaFlow").classList.remove("hidden");
-  if(type==="STEMI") $("stemiFlow").classList.remove("hidden");
-  if(type==="Other") $("otherFlow").classList.remove("hidden");
-}
-
-$("callback").addEventListener("input",e=>{let d=e.target.value.replace(/\D/g,"").slice(0,10);let f=d;if(d.length>3)f=d.slice(0,3)+"-"+d.slice(3);if(d.length>6)f=d.slice(0,3)+"-"+d.slice(3,6)+"-"+d.slice(6);e.target.value=f;e.target.setCustomValidity(f.length===0||/^\d{3}-\d{3}-\d{4}$/.test(f)?"":"Enter callback as 000-000-0000");generate();});
-$("dob").addEventListener("input",e=>{
-  let digits=e.target.value.replace(/\D/g,"").slice(0,8);
-  let formatted=digits;
-  if(digits.length>2) formatted=digits.slice(0,2)+"/"+digits.slice(2);
-  if(digits.length>4) formatted=digits.slice(0,2)+"/"+digits.slice(2,4)+"/"+digits.slice(4);
-  e.target.value=formatted;
-  e.target.setCustomValidity(formatted.length===0||formatted.length===10?"":"Enter DOB as 00/00/0000");
-  generate();
-});
-
-ids.filter(id=>id!=="facility"&&id!=="dob"&&id!=="callback").forEach(id=>$(id).addEventListener(id==="type"?"change":"input",()=>{
-  if(id==="type"){
-    const t=val("type");
-    if(t!=="STROKE"){
-      lkn="";
-      document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active"));
-      $("strokeYes").classList.add("hidden"); $("strokeNo").classList.add("hidden");
-      $("reason").value = t && t!=="STROKE" ? "Request callback for " + t : "";
-    } else if(/^Request callback for (TRAUMA|STEMI|Other)$/.test($("reason").value)){
-      $("reason").value="";
-    }
-  }
-  generate();
-}));
-document.querySelectorAll("[data-lkn]").forEach(btn=>btn.addEventListener("click",()=>{
-  lkn=btn.dataset.lkn;
-  document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.toggle("active",b===btn));
-  $("strokeYes").classList.toggle("hidden",lkn!=="YES");
-  $("strokeNo").classList.toggle("hidden",lkn!=="NO");
-  generate();
-}));
-$("copy").addEventListener("click",async()=>{
-  try{await navigator.clipboard.writeText($("output").value);$("copyStatus").textContent="Message copied to clipboard."}
-  catch(e){$("output").select();document.execCommand("copy");$("copyStatus").textContent="Message copied to clipboard."}
-  setTimeout(()=>$("copyStatus").textContent="",2500);
-});
-$("clear").addEventListener("click",()=>{
-  if(!confirm("Clear this call and start a new one?")) return;
-  ids.forEach(id=>$(id).value=""); $("facility").dataset.value=""; $("facilityOther").classList.add("hidden"); $("facilityList").classList.add("hidden"); lkn="";
-  document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active"));
-  $("strokeYes").classList.add("hidden");$("strokeNo").classList.add("hidden");
-  $("copyStatus").textContent=""; generate(); $("type").focus();
-});
-
-const themeToggle=$("themeToggle");
-function setTheme(theme){
-  document.documentElement.dataset.theme=theme;
-  themeToggle.textContent=theme==="dark"?"☀ Light Mode":"☾ Dark Mode";
-}
-setTheme("dark");
-themeToggle.addEventListener("click",()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
-
-generate();
-</script>
+  <script type="module" src="display.js"></script>
 </body>
 </html>
