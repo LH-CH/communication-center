@@ -171,6 +171,11 @@ $("facility").addEventListener("keydown",e=>{
 });
 document.addEventListener("click",e=>{if(!e.target.closest(".combo"))$("facilityList").classList.add("hidden")});
 
+function autoSizeOutput(){
+  const box=$("output");
+  box.style.height="0px";
+  box.style.height=box.scrollHeight+"px";
+}
 function generate(){
   const rawType=val("type");
   const displayType=rawType.startsWith("Other - ")?rawType.replace(/^Other - /,""):rawType;
@@ -187,8 +192,7 @@ function generate(){
   );
   if(type==="STROKE" && lkn) lines.push("LKN <24 hrs: "+lkn);
   $("output").value=lines.join("\n");
-  $("output").style.height="auto";
-  $("output").style.height=$("output").scrollHeight+"px";
+  autoSizeOutput();
   showFlow(type);
 }
 function showFlow(type){
@@ -276,6 +280,7 @@ setTheme("dark");
 themeToggle.addEventListener("click",()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
 
 generate();
+window.addEventListener("resize",autoSizeOutput);
 </script>
 </body>
 </html>
