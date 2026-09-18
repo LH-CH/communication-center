@@ -41,7 +41,45 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
         <select id="type"><option value="">Select...</option><option>STROKE</option><option>TRAUMA</option><option>STEMI</option></select>
       </div>
       <div class="field"><label for="caller">Caller Name</label><input id="caller" autocomplete="off"></div>
-      <div class="field"><label for="facility">Sending Facility</label><input id="facility" autocomplete="off"></div>
+      <div class="field"><label for="facility">Sending Facility</label>
+        <select id="facility">
+          <option value="">Select facility...</option>
+          <option value="Anaconda-Community Hospital of Anaconda">Anaconda-Community Hospital of Anaconda</option>
+          <option value="Brendan House">Brendan House</option>
+          <option value="Bozeman-Bozeman Health Deaconess Hospital">Bozeman-Bozeman Health Deaconess Hospital</option>
+          <option value="Bonner&#x27;s Ferry-Boundary Community Hospital">Bonner&#x27;s Ferry-Boundary Community Hospital</option>
+          <option value="Browning-Blackfeet Community Hospital">Browning-Blackfeet Community Hospital</option>
+          <option value="Butte-St. James&#x27; Hospital">Butte-St. James&#x27; Hospital</option>
+          <option value="Clinic (enter name below)">Clinic (enter name below)</option>
+          <option value="Chester Logan Health">Chester Logan Health</option>
+          <option value="Conrad Logan Health">Conrad Logan Health</option>
+          <option value="Cutbank Logan Health">Cutbank Logan Health</option>
+          <option value="Deer Lodge Medical Center">Deer Lodge Medical Center</option>
+          <option value="Dillon-Barrett Hospital">Dillon-Barrett Hospital</option>
+          <option value="Eureka Logan Health Primary Care">Eureka Logan Health Primary Care</option>
+          <option value="Fort Harrison-VA">Fort Harrison-VA</option>
+          <option value="Glasgow-Frances Mahon Deaconess Hospital">Glasgow-Frances Mahon Deaconess Hospital</option>
+          <option value="Great Falls-Benefis">Great Falls-Benefis</option>
+          <option value="Great Falls Clinic">Great Falls Clinic</option>
+          <option value="Hamilton-Bitteroot Health Daly Hospital">Hamilton-Bitteroot Health Daly Hospital</option>
+          <option value="Havre-Northern Montana Hospital">Havre-Northern Montana Hospital</option>
+          <option value="Helena-St. Peter&#x27;s Healthcare">Helena-St. Peter&#x27;s Healthcare</option>
+          <option value="Kalispell-Logan Health">Kalispell-Logan Health</option>
+          <option value="Libby-Cabinet Peaks Medical Center">Libby-Cabinet Peaks Medical Center</option>
+          <option value="Lewistown-Central Montana Hospital">Lewistown-Central Montana Hospital</option>
+          <option value="Missoula-Community Medical Center">Missoula-Community Medical Center</option>
+          <option value="Missoula-St. Patrick&#x27;s Providence">Missoula-St. Patrick&#x27;s Providence</option>
+          <option value="Plains-Clark Fork Valley Hospital">Plains-Clark Fork Valley Hospital</option>
+          <option value="Polson-St. Joseph&#x27;s Hospital">Polson-St. Joseph&#x27;s Hospital</option>
+          <option value="Red Lodge-Beartooth Billings Clinic">Red Lodge-Beartooth Billings Clinic</option>
+          <option value="Ronan-St. Luke&#x27;s Medical Center">Ronan-St. Luke&#x27;s Medical Center</option>
+          <option value="Shelby-Logan Health">Shelby-Logan Health</option>
+          <option value="Superior-Mineral Community Hospital">Superior-Mineral Community Hospital</option>
+          <option value="Whitefish-Logan Health">Whitefish-Logan Health</option>
+          <option value="Other">Other</option>
+        </select>
+        <input id="facilityOther" class="hidden" autocomplete="off" placeholder="Enter sending facility" style="margin-top:8px">
+      </div>
       <div class="field"><label for="callback">Callback Number</label><input id="callback" type="tel" autocomplete="off"></div>
       <div class="field"><label for="patient">Patient Name</label><input id="patient" autocomplete="off"></div>
       <div class="field"><label for="dob">Date of Birth</label><input id="dob" autocomplete="off" placeholder="MM/DD/YYYY"></div>
@@ -98,11 +136,18 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
   </div>
 </main>
 <script>
-const ids=["type","caller","facility","callback","patient","dob","reason"];
+const ids=["type","caller","facility","facilityOther","callback","patient","dob","reason"];
 const $=id=>document.getElementById(id);
 let lkn="";
 
-function val(id){return $(id).value.trim()}
+function val(id){
+  if(id==="facility"){
+    const selected=$("facility").value.trim();
+    if(selected==="Other" || selected==="Clinic (enter name below)") return $("facilityOther").value.trim();
+    return selected;
+  }
+  return $(id).value.trim();
+}
 function generate(){
   const type=val("type");
   const lines=[];
@@ -126,7 +171,13 @@ function showFlow(type){
   if(type==="TRAUMA") $("traumaFlow").classList.remove("hidden");
   if(type==="STEMI") $("stemiFlow").classList.remove("hidden");
 }
-ids.forEach(id=>$(id).addEventListener(id==="type"?"change":"input",()=>{
+ids.forEach(id=>$(id).addEventListener((id==="type"||id==="facility")?"change":"input",()=>{
+  if(id==="facility"){
+    const manual = $("facility").value==="Other" || $("facility").value==="Clinic (enter name below)";
+    $("facilityOther").classList.toggle("hidden",!manual);
+    if(manual) $("facilityOther").focus();
+    else $("facilityOther").value="";
+  }
   if(id==="type"){
     const t=val("type");
     if(t!=="STROKE"){
@@ -154,7 +205,7 @@ $("copy").addEventListener("click",async()=>{
 });
 $("clear").addEventListener("click",()=>{
   if(!confirm("Clear this call and start a new one?")) return;
-  ids.forEach(id=>$(id).value=""); lkn="";
+  ids.forEach(id=>$(id).value=""); $("facilityOther").classList.add("hidden"); lkn="";
   document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active"));
   $("strokeYes").classList.add("hidden");$("strokeNo").classList.add("hidden");
   $("copyStatus").textContent=""; generate(); $("type").focus();
