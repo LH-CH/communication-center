@@ -1,1 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Transfer Center Rollover</title>
+<style>
+:root{--bg:#eef4f8;--panel:#fff;--ink:#17232d;--muted:#61717e;--line:#d8e2e8;--blue:#2d6f98;--soft:#e8f2f8;--danger:#a43d3d;--ok:#26734d}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.app{max-width:1400px;margin:auto;padding:20px}.header{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:16px}
+.header h1{margin:0 0 8px;font-size:20px}.script{font-size:18px;font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}.card h2{font-size:15px;letter-spacing:.06em;margin:0 0 16px;color:var(--muted)}
+label{display:block;font-weight:650;margin:0 0 6px}.field{margin-bottom:14px}
+input,select,textarea{width:100%;border:1px solid #b9c8d1;border-radius:8px;padding:11px 12px;font:inherit;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:3px solid #d8ebf6;border-color:var(--blue)}
+textarea{resize:vertical;min-height:82px}.copybox{min-height:190px;background:#f8fafb;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.row{display:flex;gap:10px}.row>*{flex:1}
+button{border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}
+button.secondary{background:#e8eef2;color:#243540}button.choice{background:#eef4f7;color:#243540;border:1px solid #cbd8df}
+button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap:10px;margin-top:10px}
+.workflow{margin-top:16px;border-top:1px solid var(--line);padding-top:18px}.workflow h3{margin:0 0 10px}
+.notice{background:var(--soft);border-left:4px solid var(--blue);padding:12px 14px;border-radius:6px;margin:10px 0}
+.steps{margin:10px 0 0;padding-left:22px}.hidden{display:none!important}.status{font-size:13px;color:var(--ok);min-height:20px;margin-top:7px}
+.footer-note{font-size:12px;color:var(--muted);margin-top:14px}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.app{padding:10px}.script{font-size:16px}}
+@media print{.actions,.footer-note{display:none}body{background:#fff}.app{max-width:none}}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="header">
+    <h1>Transfer Center Rollover</h1>
+    <div class="script">Communication Center, this is <span id="scriptName">__________</span> answering for the Transfer Center. The RN is currently on another call. I’ll ask you a few quick questions.</div>
+  </section>
 
+  <div class="grid">
+    <section class="card">
+      <h2>CALL INFORMATION</h2>
+      <div class="field"><label for="operator">Your Name</label><input id="operator" autocomplete="off" placeholder="Name"></div>
+      <div class="field"><label for="type">Call Type</label>
+        <select id="type"><option value="">Select...</option><option>STROKE</option><option>TRAUMA</option><option>STEMI</option></select>
+      </div>
+      <div class="field"><label for="caller">Caller Name</label><input id="caller" autocomplete="off"></div>
+      <div class="field"><label for="facility">Sending Facility</label><input id="facility" autocomplete="off"></div>
+      <div class="field"><label for="callback">Callback Number</label><input id="callback" type="tel" autocomplete="off"></div>
+      <div class="field"><label for="patient">Patient Name</label><input id="patient" autocomplete="off"></div>
+      <div class="field"><label for="dob">Date of Birth</label><input id="dob" autocomplete="off" placeholder="MM/DD/YYYY"></div>
+      <div class="field"><label for="reason">Chief Complaint / Reason for Call</label><textarea id="reason"></textarea></div>
+      <div class="actions"><button class="secondary" id="clear">Clear / New Call</button></div>
+      <div class="footer-note">Form entries remain in this browser page only. This version does not save call information or statistics.</div>
+    </section>
+
+    <section>
+      <div class="card">
+        <h2>VOALTE MESSAGE</h2>
+        <textarea id="output" class="copybox" readonly></textarea>
+        <div class="actions"><button id="copy">Copy Message</button></div>
+        <div id="copyStatus" class="status"></div>
+
+        <div class="workflow">
+          <h2>DYNAMIC WORKFLOW</h2>
+          <div id="noneFlow" class="notice">Select STROKE, TRAUMA, or STEMI to display the workflow.</div>
+
+          <div id="strokeFlow" class="hidden">
+            <h3>STROKE</h3>
+            <div class="field">
+              <label>Last Known Normal less than 24 hours?</label>
+              <div class="row">
+                <button type="button" class="choice" data-lkn="YES">YES</button>
+                <button type="button" class="choice" data-lkn="NO">NO</button>
+              </div>
+            </div>
+            <div id="strokeYes" class="notice hidden">
+              <strong>Next actions</strong>
+              <ol class="steps">
+                <li>Contact Neurology (AMCOM On Call) and connect caller to provider.</li>
+                <li>Send Voalte to the Neurologist and Transfer Center RN with the information obtained.</li>
+              </ol>
+            </div>
+            <div id="strokeNo" class="notice hidden">
+              <strong>LKN ≥ 24 hours / NO</strong><br>
+              The supplied workflow does not specify the next action for this branch. Follow the current Transfer Center procedure.
+            </div>
+          </div>
+
+          <div id="traumaFlow" class="hidden">
+            <h3>TRAUMA</h3>
+            <div class="notice"><strong>Next action:</strong> Send the Voalte message with the information obtained.</div>
+          </div>
+
+          <div id="stemiFlow" class="hidden">
+            <h3>STEMI</h3>
+            <div class="notice"><strong>Next action:</strong> Send the Voalte message with the information obtained.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+const ids=["operator","type","caller","facility","callback","patient","dob","reason"];
+const $=id=>document.getElementById(id);
+let lkn="";
+
+function val(id){return $(id).value.trim()}
+function generate(){
+  $("scriptName").textContent=val("operator") || "__________";
+  const type=val("type");
+  const lines=[];
+  if(type) lines.push(type+" – Transfer Center Rollover","");
+  lines.push(
+    "Caller: "+val("caller"),
+    "Sending Fac: "+val("facility"),
+    "Callback: "+val("callback"),
+    "Patient: "+val("patient"),
+    "DOB: "+val("dob"),
+    "Reason: "+val("reason")
+  );
+  if(type==="STROKE" && lkn) lines.push("LKN <24 hrs: "+lkn);
+  $("output").value=lines.join("\n");
+  showFlow(type);
+}
+function showFlow(type){
+  ["noneFlow","strokeFlow","traumaFlow","stemiFlow"].forEach(x=>$(x).classList.add("hidden"));
+  if(!type) $("noneFlow").classList.remove("hidden");
+  if(type==="STROKE") $("strokeFlow").classList.remove("hidden");
+  if(type==="TRAUMA") $("traumaFlow").classList.remove("hidden");
+  if(type==="STEMI") $("stemiFlow").classList.remove("hidden");
+}
+ids.forEach(id=>$(id).addEventListener(id==="type"?"change":"input",()=>{
+  if(id==="type" && val("type")!=="STROKE"){lkn=""; document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active")); $("strokeYes").classList.add("hidden"); $("strokeNo").classList.add("hidden")}
+  generate();
+}));
+document.querySelectorAll("[data-lkn]").forEach(btn=>btn.addEventListener("click",()=>{
+  lkn=btn.dataset.lkn;
+  document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.toggle("active",b===btn));
+  $("strokeYes").classList.toggle("hidden",lkn!=="YES");
+  $("strokeNo").classList.toggle("hidden",lkn!=="NO");
+  generate();
+}));
+$("copy").addEventListener("click",async()=>{
+  try{await navigator.clipboard.writeText($("output").value);$("copyStatus").textContent="Message copied to clipboard."}
+  catch(e){$("output").select();document.execCommand("copy");$("copyStatus").textContent="Message copied to clipboard."}
+  setTimeout(()=>$("copyStatus").textContent="",2500);
+});
+$("clear").addEventListener("click",()=>{
+  if(!confirm("Clear this call and start a new one?")) return;
+  ids.forEach(id=>$(id).value=""); lkn="";
+  document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active"));
+  $("strokeYes").classList.add("hidden");$("strokeNo").classList.add("hidden");
+  $("copyStatus").textContent=""; generate(); $("type").focus();
+});
+generate();
+</script>
+</body>
+</html>
