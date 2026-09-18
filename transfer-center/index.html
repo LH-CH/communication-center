@@ -186,10 +186,11 @@ function generate(){
     "Caller: "+val("caller"),
     "Sending Facility: "+val("facility"),
     "Callback: "+val("callback"),
-    "Patient: "+val("patient"),
-    "DOB: "+val("dob"),
-    "Message: "+val("reason")
+    "Patient: "+val("patient")
   );
+  const ageSexForMessage=getAgeSex();
+  lines.push("DOB: "+val("dob")+(ageSexForMessage ? " | "+ageSexForMessage : ""));
+  lines.push("Message: "+val("reason"));
   if(type==="STROKE" && lkn) lines.push("LKN <24 hrs: "+lkn);
   $("output").value=lines.join("\n");
   autoSizeOutput();
