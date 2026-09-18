@@ -18,7 +18,7 @@ input:focus,select:focus,textarea:focus{outline:3px solid #d8ebf6;border-color:v
 textarea{resize:vertical;min-height:82px}.copybox{min-height:190px;background:var(--output);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
 .row{display:flex;gap:10px}.row>*{flex:1}
 button{border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}
-button.secondary{background:var(--soft);color:var(--ink)}button.choice{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+button.secondary{background:var(--soft);color:var(--ink)}button.danger{background:#b42318;color:#fff}button.danger:hover{background:#8f1c13}button.choice{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
 button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap:10px;margin-top:10px}
 .workflow{margin-top:16px;border-top:1px solid var(--line);padding-top:18px}.workflow h3{margin:0 0 10px}
 .notice{background:var(--soft);border-left:4px solid var(--blue);padding:12px 14px;border-radius:6px;margin:10px 0}
@@ -53,9 +53,9 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
       </div>
       <div class="field"><label for="callback">Callback Number</label><input id="callback" type="tel" autocomplete="off"></div>
       <div class="field"><label for="patient">Patient Name</label><input id="patient" autocomplete="off"></div>
-      <div class="field"><label for="dob">Date of Birth</label><input id="dob" autocomplete="off" placeholder="MM/DD/YYYY"></div>
+      <div class="field"><label for="dob">Date of Birth</label><input id="dob" autocomplete="off" inputmode="numeric" maxlength="10" placeholder="00/00/0000"></div>
       <div class="field"><label for="reason">Message</label><textarea id="reason"></textarea></div>
-      <div class="actions"><button class="secondary" id="clear">Clear / New Call</button></div>
+      <div class="actions"><button class="danger" id="clear">Clear / New Call</button></div>
       <div class="footer-note">Form entries remain in this browser page only. This version does not save call information.</div>
     </section>
 
@@ -185,7 +185,18 @@ function showFlow(type){
   if(type==="TRAUMA") $("traumaFlow").classList.remove("hidden");
   if(type==="STEMI") $("stemiFlow").classList.remove("hidden");
 }
-ids.filter(id=>id!=="facility").forEach(id=>$(id).addEventListener(id==="type"?"change":"input",()=>{
+
+$("dob").addEventListener("input",e=>{
+  let digits=e.target.value.replace(/\D/g,"").slice(0,8);
+  let formatted=digits;
+  if(digits.length>2) formatted=digits.slice(0,2)+"/"+digits.slice(2);
+  if(digits.length>4) formatted=digits.slice(0,2)+"/"+digits.slice(2,4)+"/"+digits.slice(4);
+  e.target.value=formatted;
+  e.target.setCustomValidity(formatted.length===0||formatted.length===10?"":"Enter DOB as 00/00/0000");
+  generate();
+});
+
+ids.filter(id=>id!=="facility"&&id!=="dob").forEach(id=>$(id).addEventListener(id==="type"?"change":"input",()=>{
   if(id==="type"){
     const t=val("type");
     if(t!=="STROKE"){
