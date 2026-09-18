@@ -190,7 +190,7 @@ function generate(){
   );
   const ageSexForMessage=getAgeSex();
   lines.push("DOB: "+val("dob")+(ageSexForMessage ? " | "+ageSexForMessage : ""));
-  lines.push("Message: "+val("reason"));
+  if(val("reason")) lines.push("Message: "+val("reason"));
   if(type==="STROKE" && lkn) lines.push("LKN <24 hrs: "+lkn);
   $("output").value=lines.join("\n");
   autoSizeOutput();
