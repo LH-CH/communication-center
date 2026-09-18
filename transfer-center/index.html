@@ -114,7 +114,7 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
       </div>
     </section>
   </div>
-<div class="footer-note">Transfer Center Rollover • Communication Center • v1.0 • Updated 09/2026<br>This version does not save call information.</div></main>
+<div class="footer-note">Transfer Center Rollover • Communication Center • v1.2 • Updated 09/2026<br>This version does not save call information.</div></main>
 <script>
 const ids=["type","caller","facility","facilityOther","callback","patient","dob","sex","reason"];
 const $=id=>document.getElementById(id);
@@ -261,6 +261,48 @@ document.querySelectorAll("[data-lkn]").forEach(btn=>btn.addEventListener("click
   generate();
 }));
 
+
+
+let formDirty=false;
+let statsRecordedForCall=false;
+
+function markFormDirty(){
+  formDirty=true;
+}
+
+window.addEventListener("beforeunload",(event)=>{
+  if(!formDirty) return;
+  event.preventDefault();
+  event.returnValue="";
+});
+
+const STATS_ENDPOINT='https://default5c2e50a16fc74ad9bdc5d3a65b908d.2a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/85d174faa08a4337a61521356bfa9d6f/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=MxklQpJ8SGepALajJk8hfxCW9yVH_9mJQiSLejm_Ef4';
+
+function statsCallType(){
+  const t=val("type");
+  if(!t) return "";
+  return t.replace(/^Other\s*-\s*/i,"");
+}
+
+async function recordCallStat(){
+  if(statsRecordedForCall) return true;
+  const callType=statsCallType();
+  if(!callType) return false;
+  try{
+    const response=await fetch(STATS_ENDPOINT,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({callType})
+    });
+    if(!response.ok) throw new Error("Stats request failed: "+response.status);
+    statsRecordedForCall=true;
+    return true;
+  }catch(err){
+    console.warn("Call statistics were not recorded.",err);
+    return false;
+  }
+}
+
 const requiredFields=["type","caller","facility","callback","patient"];
 function validateRequired(){
   let valid=true;
@@ -282,8 +324,21 @@ function clearValidation(){
   $("validationNote").classList.add("hidden");
 }
 
+
+document.addEventListener("input",(event)=>{
+  if(event.target && event.target.closest && event.target.closest("form, .card, .panel")){
+    const id=event.target.id || "";
+    if(["type","caller","facility","facilityOther","callback","patient","dob","sex","reason"].includes(id)) markFormDirty();
+  }
+});
+document.addEventListener("change",(event)=>{
+  const id=event.target && event.target.id ? event.target.id : "";
+  if(["type","caller","facility","facilityOther","callback","patient","dob","sex","reason"].includes(id)) markFormDirty();
+});
+
 $("copy").addEventListener("click",async()=>{
   if(!validateRequired()) return;
+  await recordCallStat();
   try{await navigator.clipboard.writeText($("output").value);$("copyStatus").textContent="Message copied to clipboard."}
   catch(e){$("output").select();document.execCommand("copy");$("copyStatus").textContent="Message copied to clipboard."}
   setTimeout(()=>$("copyStatus").textContent="",2500);
@@ -293,7 +348,7 @@ $("clear").addEventListener("click",()=>{
   ids.forEach(id=>$(id).value=""); $("facility").dataset.value=""; $("facilityOther").classList.add("hidden"); $("facilityList").classList.add("hidden"); lkn="";
   document.querySelectorAll("[data-lkn]").forEach(b=>b.classList.remove("active"));
   $("strokeYes").classList.add("hidden");$("strokeNo").classList.add("hidden");
-  $("copyStatus").textContent=""; $("ageSex").textContent="--"; clearValidation(); generate(); $("type").focus();
+  $("copyStatus").textContent=""; $("ageSex").textContent="--"; clearValidation(); formDirty=false; statsRecordedForCall=false; generate(); $("type").focus();
 });
 
 const themeToggle=$("themeToggle");
