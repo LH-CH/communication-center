@@ -69,7 +69,7 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
         <div id="noneFlow" class="notice">Select Call Type to display the workflow.</div>
 
         <div id="strokeFlow" class="hidden">
-          <h3>STROKE</h3><div class="workflow-label">NEXT ACTIONS</div>
+          <h3>STROKE</h3><div class="workflow-label">NEXT ACTIONS</div><div class="notice first-step"><strong>1.</strong> Complete call information form.</div>
           <div class="field">
             <label>Last Known Normal less than 24 hours?</label>
             <div class="row">
@@ -91,17 +91,17 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
         </div>
 
         <div id="traumaFlow" class="hidden">
-          <h3>TRAUMA</h3><div class="workflow-label">NEXT ACTIONS</div>
+          <h3>TRAUMA</h3><div class="workflow-label">NEXT ACTIONS</div><div class="notice first-step"><strong>1.</strong> Complete call information form.</div>
           <div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div>
         </div>
 
         <div id="stemiFlow" class="hidden">
-          <h3>STEMI</h3><div class="workflow-label">NEXT ACTIONS</div>
+          <h3>STEMI</h3><div class="workflow-label">NEXT ACTIONS</div><div class="notice first-step"><strong>1.</strong> Complete call information form.</div>
           <div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div>
         </div>
         <div id="otherFlow" class="hidden">
           <h3 id="otherFlowTitle">OTHER</h3>
-          <div class="workflow-label">NEXT ACTIONS</div>
+          <div class="workflow-label">NEXT ACTIONS</div><div class="notice first-step"><strong>1.</strong> Complete call information form.</div>
           <div class="notice">Send the Voalte message to Transfer Center RN with the information obtained.</div>
         </div>
 
@@ -172,9 +172,11 @@ $("facility").addEventListener("keydown",e=>{
 document.addEventListener("click",e=>{if(!e.target.closest(".combo"))$("facilityList").classList.add("hidden")});
 
 function generate(){
+  const rawType=val("type");
+  const displayType=rawType.startsWith("Other - ")?rawType.replace(/^Other - /,""):rawType;
   const type=val("type");
   const lines=[];
-  if(type) lines.push(type+" – Transfer Center Rollover","");
+  if(type) lines.push(displayType+" – Transfer Center Rollover","");
   lines.push(
     "Caller: "+val("caller"),
     "Sending Facility: "+val("facility"),
