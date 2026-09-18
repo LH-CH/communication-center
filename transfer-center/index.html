@@ -209,21 +209,22 @@ function showFlow(type){
 
 $("callback").addEventListener("input",e=>{let d=e.target.value.replace(/\D/g,"").slice(0,10);let f=d;if(d.length>3)f=d.slice(0,3)+"-"+d.slice(3);if(d.length>6)f=d.slice(0,3)+"-"+d.slice(3,6)+"-"+d.slice(6);e.target.value=f;e.target.setCustomValidity(f.length===0||/^\d{3}-\d{3}-\d{4}$/.test(f)?"":"Enter callback as 000-000-0000");generate();});
 
-function updateAgeSex(){
+
+function getAgeSex(){
   const raw=$("dob").value;
   const sex=$("sex").value;
-  let age="";
-  if(/^\d{2}\/\d{2}\/\d{4}$/.test(raw)){
-    const [mm,dd,yyyy]=raw.split("/").map(Number);
-    const dob=new Date(yyyy,mm-1,dd);
-    if(dob.getFullYear()===yyyy && dob.getMonth()===mm-1 && dob.getDate()===dd && dob<=new Date()){
-      const today=new Date();
-      age=today.getFullYear()-yyyy;
-      const birthdayPassed=(today.getMonth()>mm-1)||(today.getMonth()===mm-1&&today.getDate()>=dd);
-      if(!birthdayPassed) age--;
-    }
-  }
-  $("ageSex").textContent=(age!==""&&sex)?age+" "+sex:"--";
+  if(!/^\d{2}\/\d{2}\/\d{4}$/.test(raw) || !sex) return "";
+  const [mm,dd,yyyy]=raw.split("/").map(Number);
+  const dob=new Date(yyyy,mm-1,dd);
+  const today=new Date();
+  if(dob.getFullYear()!==yyyy || dob.getMonth()!==mm-1 || dob.getDate()!==dd || dob>today) return "";
+  let age=today.getFullYear()-yyyy;
+  if(today.getMonth()<mm-1 || (today.getMonth()===mm-1 && today.getDate()<dd)) age--;
+  return age+" "+sex;
+}
+
+function updateAgeSex(){
+  $("ageSex").textContent=getAgeSex() || "--";
 }
 $("sex").addEventListener("change",()=>{updateAgeSex();generate();});
 
