@@ -1,6 +1,6 @@
 # Transfer Center Rollover
 
-**Current version:** 1.3  
+**Current version:** 1.4  
 **Last updated:** September 21, 2026  
 **Owner:** Communication Center
 
@@ -30,6 +30,11 @@ This single-page tool supports Communication Center staff when answering rollove
 The linked folder contains the current quick-reference/how-to guide and workflow document.
 
 ## Change log
+
+### v1.4 — September 21, 2026
+
+- Moved the in-tool change log to this README.
+- Added a **Change Log & README** button beside the Transfer Center reference-guide link.
 
 ### v1.3 — September 21, 2026
 
