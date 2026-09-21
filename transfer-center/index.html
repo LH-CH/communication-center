@@ -15,7 +15,7 @@ html[data-theme="dark"]{--bg:#0d141a;--panel:#151e25;--ink:#edf4f7;--muted:#a9ba
 label{display:block;font-weight:650;margin:0 0 6px}.field{margin-bottom:14px}
 input,select,textarea{width:100%;border:1px solid #b9c8d1;border-radius:8px;padding:11px 12px;font:inherit;background:var(--input);color:var(--ink)}
 input:focus,select:focus,textarea:focus{outline:3px solid #d8ebf6;border-color:var(--blue)}
-textarea{resize:vertical;min-height:82px}.copybox{min-height:190px;background:var(--output);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+textarea{resize:vertical;min-height:82px}.copybox{min-height:190px;background:var(--output);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;user-select:none;-webkit-user-select:none;caret-color:transparent;cursor:default}
 .row{display:flex;gap:10px}.row>*{flex:1}
 button{border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}
 button.secondary{background:var(--soft);color:var(--ink)}button.danger{background:#b42318;color:#fff}button.danger:hover{background:#8f1c13}button.choice{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
@@ -23,9 +23,10 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
 .workflow{margin-top:16px;border-top:1px solid var(--line);padding-top:18px}.workflow h3{margin:0 0 10px}
 .notice{background:var(--soft);border-left:4px solid var(--blue);padding:12px 14px;border-radius:6px;margin:10px 0}
 .steps{margin:10px 0 0;padding-left:22px}.hidden{display:none!important}.status{font-size:13px;color:var(--ok);min-height:20px;margin-top:7px}
-.helper{font-size:12px;color:var(--muted);margin-top:5px}.required-missing{border-color:#d92d20!important;box-shadow:0 0 0 1px #d92d20}.validation-note{font-size:12px;color:#f97066;margin-top:8px;font-weight:700}.footer-note{font-size:12px;color:var(--muted);margin-top:14px}
+.helper{font-size:12px;color:var(--muted);margin-top:5px}.required-missing{border-color:#d92d20!important;box-shadow:0 0 0 1px #d92d20}.validation-note,.copy-warning{font-size:12px;color:var(--danger);margin-top:8px;font-weight:700}.footer-note{font-size:12px;color:var(--muted);margin-top:14px}
 .workflow-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted);margin:4px 0 8px}.workflow-steps{margin:0;padding-left:22px}.workflow-steps li{margin:0 0 9px;padding:8px 10px 8px 4px}.workflow-steps li:last-child{margin-bottom:0}.notice strong:first-child{display:inline-block;min-width:18px}.patient-demo-row{display:grid;grid-template-columns:1.25fr .9fr .9fr;gap:10px}.readonly-field{min-height:42px;display:flex;align-items:center;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--output);font-weight:700}.combo{position:relative}.combo-list{position:absolute;z-index:50;left:0;right:0;top:100%;margin-top:4px;max-height:260px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,.25)}
 .combo-option{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--line)}.combo-option:last-child{border-bottom:0}.combo-option:hover,.combo-option.active{background:var(--soft)}.combo-empty{padding:10px 12px;color:var(--muted)}
+.resource-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}.resource-links a{display:inline-block;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--ink);font-weight:700;text-decoration:none}.resource-links a:hover{border-color:var(--blue);color:var(--blue)}.change-log{margin-top:16px}.change-log ul{margin:8px 0 0;padding-left:20px}.change-log li{margin:5px 0}
 @media(max-width:850px){.grid{grid-template-columns:1fr}.app{padding:10px}.script{font-size:16px}}
 @media print{.actions,.footer-note{display:none}body{background:#fff}.app{max-width:none}}
 </style>
@@ -107,14 +108,27 @@ button.choice.active{background:var(--blue);color:#fff}.actions{display:flex;gap
 
         <div class="workflow">
           <h2>VOALTE MESSAGE</h2>
-          <textarea id="output" class="copybox" readonly></textarea>
+          <textarea id="output" class="copybox" readonly tabindex="-1" aria-describedby="copyWarning"></textarea>
+          <div id="copyWarning" class="copy-warning hidden" role="alert">Use the Copy Message button to copy this text.</div>
           <div class="actions"><button id="copy">Copy Message</button><div id="validationNote" class="validation-note hidden">Complete the highlighted required fields before copying.</div></div>
           <div id="copyStatus" class="status"></div>
         </div>
       </div>
     </section>
   </div>
-<div class="footer-note">Transfer Center Rollover • Communication Center • v1.2 • Updated 09/2026<br>This version does not save call information.</div></main>
+  <section class="card change-log">
+    <h2>REFERENCE MATERIALS</h2>
+    <div class="resource-links"><a href="https://billingsclinic.sharepoint.com/sites/CommunicationCenter/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FCommunicationCenter%2FShared%20Documents%2FInternal%2FResources%2FTransfer%20Center&amp;viewid=8fafce31%2D6158%2D4cd2%2Da7a3%2D6cb900579425&amp;CT=1790006486862&amp;OR=OWA%2DNT%2DMail&amp;CID=5d49f747%2Dcc15%2D7cbf%2D31e7%2Da6313058705a&amp;SI=NonSentItems&amp;SLSync=Y" target="_blank" rel="noopener">Transfer Center Reference Guides: How-To &amp; Workflow</a></div>
+  </section>
+  <section class="card change-log">
+    <h2>CHANGE LOG</h2>
+    <ul>
+      <li><strong>v1.3 — September 21, 2026:</strong> Added the Transfer Center reference-guide link and documented changes in this log.</li>
+      <li><strong>v1.2 — September 21, 2026:</strong> Voalte message text can only be copied with the Copy Message button; selection and right-click copying display a brief reminder.</li>
+      <li><strong>v1.1 — September 2026:</strong> Added dynamic call-type workflows, required-field validation, theme toggle, and clear/new-call controls.</li>
+    </ul>
+  </section>
+<div class="footer-note">Transfer Center Rollover • Communication Center • v1.3 • Updated 09/21/2026<br>This version does not save call information.</div></main>
 <script>
 const ids=["type","caller","facility","facilityOther","callback","patient","dob","sex","reason"];
 const $=id=>document.getElementById(id);
@@ -340,9 +354,27 @@ $("copy").addEventListener("click",async()=>{
   if(!validateRequired()) return;
   await recordCallStat();
   try{await navigator.clipboard.writeText($("output").value);$("copyStatus").textContent="Message copied to clipboard."}
-  catch(e){$("output").select();document.execCommand("copy");$("copyStatus").textContent="Message copied to clipboard."}
+  catch(e){
+    const fallback=document.createElement("textarea");
+    fallback.value=$("output").value;
+    fallback.style.position="fixed";
+    fallback.style.opacity="0";
+    document.body.appendChild(fallback);
+    fallback.select();
+    document.execCommand("copy");
+    fallback.remove();
+    $("copyStatus").textContent="Message copied to clipboard.";
+  }
   setTimeout(()=>$("copyStatus").textContent="",2500);
 });
+const showCopyWarning=()=>{
+  $("copyWarning").classList.remove("hidden");
+  clearTimeout(showCopyWarning.timer);
+  showCopyWarning.timer=setTimeout(()=>$("copyWarning").classList.add("hidden"),3000);
+};
+$("output").addEventListener("pointerdown",event=>{event.preventDefault();showCopyWarning();});
+$("output").addEventListener("selectstart",event=>{event.preventDefault();showCopyWarning();});
+$("output").addEventListener("contextmenu",event=>{event.preventDefault();showCopyWarning();});
 $("clear").addEventListener("click",()=>{
   if(!confirm("Clear this call and start a new one?")) return;
   ids.forEach(id=>$(id).value=""); $("facility").dataset.value=""; $("facilityOther").classList.add("hidden"); $("facilityList").classList.add("hidden"); lkn="";
