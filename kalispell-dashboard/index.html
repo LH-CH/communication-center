@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a111b">
+  <meta name="description" content="Kalispell, Montana live weather, power outage map and radar TV dashboard">
+  <title>Kalispell | Live Information Dashboard</title>
+  <!-- Kalispell TV Dashboard v1.0 -->
+  <style>
+    :root{color-scheme:dark;--bg:#09111b;--panel:#111e2d;--border:#243548;--soft:#9fb1c3;--white:#f3f7fc;--accent:#73c4eb;--ok:#8bd5b1;--warn:#f8c681}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    body{overflow:hidden}
+    .screen{height:100dvh;min-height:560px;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:clamp(10px,1vw,20px);padding:clamp(12px,1.3vw,28px);background:radial-gradient(circle at 100% -30%,#182b3e 0%,transparent 48%),var(--bg)}
+    .header{display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:clamp(88px,12vh,140px)}
+    .eyebrow,.label{font-weight:750;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);font-size:clamp(10px,.8vw,16px)}
+    .place{display:flex;align-items:center;gap:12px;margin-bottom:7px}
+    .place .dot{height:9px;width:9px;flex-shrink:0;background:var(--accent);border-radius:50%;box-shadow:0 0 15px #73c4eb77}
+    h1{font-size:clamp(19px,1.9vw,36px);margin:0;font-weight:700;letter-spacing:-.04em}
+    .date{color:var(--soft);font-size:clamp(14px,1vw,20px);margin-top:5px}
+    .clockgroup{text-align:right;white-space:nowrap}
+    .clock{font-size:clamp(48px,5.25vw,108px);font-weight:720;line-height:.98;letter-spacing:-.068em;font-variant-numeric:tabular-nums}
+    .clock small{font-size:.45em;letter-spacing:-.02em;color:#7f9bb5}
+    .tz{font-size:clamp(10px,.8vw,15px);color:var(--soft);margin-top:6px;letter-spacing:.12em}
+    .bodygrid{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:clamp(10px,1vw,20px);min-height:0}
+    .panel{min-height:0;overflow:hidden;background:linear-gradient(160deg,#142234,#101c2b);border:1px solid var(--border);border-radius:clamp(14px,1vw,21px);display:flex;flex-direction:column;position:relative}
+    .panel-head{padding:clamp(12px,1.2vw,23px) clamp(16px,1.4vw,27px) 0;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-shrink:0}
+    .panel-title{display:flex;gap:10px;align-items:center;font-weight:750;letter-spacing:.12em;text-transform:uppercase;font-size:clamp(12px,.9vw,18px)}
+    .panel-title svg{width:21px;height:21px;color:var(--accent)}
+    .external{color:var(--accent);text-decoration:none;border:1px solid #3c617a;border-radius:8px;padding:8px 12px;font-size:clamp(10px,.7vw,14px);font-weight:650;white-space:nowrap;transition:background .2s}
+    .external:hover,.external:focus-visible{background:#1b405c;outline:none}
+    .weather{grid-column:auto;grid-row:auto;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}
+    .weather-main{padding:clamp(12px,1.4vw,28px) clamp(16px,1.4vw,27px) clamp(5px,.6vw,12px);display:flex;align-items:center;gap:clamp(12px,1.25vw,22px)}
+    .weather-symbol{font-size:clamp(36px,4vw,82px);filter:drop-shadow(0 0 14px #ffffff10);line-height:1;min-width:1.3em;text-align:center}
+    .temp{font-size:clamp(52px,5vw,104px);font-weight:730;letter-spacing:-.075em;line-height:1;font-variant-numeric:tabular-nums}
+    .condition{font-size:clamp(13px,1.05vw,21px);color:var(--soft);margin-top:6px;font-weight:500}
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0 clamp(16px,1.4vw,27px);border-top:1px solid var(--border);flex:1;align-content:space-around}
+    .metric{padding:clamp(5px,.7vw,12px) 3px;min-width:0}
+    .metric:nth-child(even){padding-left:clamp(12px,1.3vw,25px);border-left:1px solid var(--border)}
+    .metric-name{color:#96abc0;font-size:clamp(10px,.75vw,15px);letter-spacing:.03em}
+    .metric-value{font-weight:680;font-size:clamp(17px,1.5vw,32px);margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .metric-value em{font-size:.65em;color:var(--soft);font-style:normal}
+    .weather-bottom{border-top:1px solid var(--border);padding:clamp(9px,.7vw,14px) clamp(16px,1.4vw,27px);display:flex;justify-content:space-between;align-items:center;gap:8px;color:#93a9be;font-size:clamp(10px,.7vw,14px)}
+    .status-dot{display:inline-block;width:7px;height:7px;background:#7d8e9f;border-radius:50%;margin-right:6px}
+    .status-dot.live{background:var(--ok)}.status-dot.error{background:var(--warn)}
+    .map-panel{grid-column:auto;grid-row:auto;}
+    .radar-panel{grid-column:auto;grid-row:auto}
+    .map-wrap{position:relative;flex:1;min-height:0;margin:clamp(11px,.9vw,18px);overflow:hidden;border-radius:10px;background:repeating-linear-gradient(45deg,#162637,#162637 14px,#1b2c3d 14px,#1b2c3d 28px)}
+    iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#152435}
+    .map-caption{position:absolute;right:12px;bottom:12px;background:#0b1726e6;padding:7px 11px;border:1px solid #324356;border-radius:8px;color:#c5d1dc;font-size:clamp(10px,.72vw,14px);pointer-events:none}
+    .radar-caption{left:12px;right:auto}
+    footer{display:flex;justify-content:space-between;align-items:center;gap:16px;color:#718ba4;font-size:clamp(10px,.75vw,15px);padding:0 4px;min-height:17px}
+    footer a{color:#a8c9df;text-decoration:none}
+    .offscreen{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+    .leftstack,.rightstack{min-height:0;display:grid;gap:clamp(10px,1vw,20px)}
+    .leftstack{grid-template-rows:minmax(0,.73fr) minmax(0,1.27fr)}
+    .rightstack{grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+    .rightstack.has-alerts{grid-template-rows:minmax(0,1fr) auto minmax(0,1fr)}
+    .clock-panel{padding:clamp(18px,2.2vw,44px);justify-content:space-between}
+    .clock-panel .clockgroup{text-align:left;white-space:nowrap}
+    .clock-panel .clock{font-size:clamp(64px,7.4vw,148px)}
+    .clock-panel .date{font-size:clamp(17px,1.55vw,30px);color:#e2eaf4}
+    .clock-panel h1{font-size:clamp(24px,2.35vw,44px)}
+    .clock-panel .tz{font-size:clamp(12px,.95vw,18px)}
+    .weather-main{padding-top:clamp(6px,.85vw,18px);padding-bottom:3px}
+    .weather-symbol{font-size:clamp(35px,3.2vw,67px)}
+    .temp{font-size:clamp(48px,4.4vw,92px)}
+    .metric-value{font-size:clamp(17px,1.38vw,29px)}
+    .metric{padding:clamp(3px,.38vw,8px) 3px}
+    .alert-banner{display:none;background:linear-gradient(100deg,#5f311d,#342327);border:1px solid #e7a16d;color:#fff4e7;border-radius:12px;padding:clamp(10px,.9vw,18px) clamp(14px,1vw,22px);align-items:center;gap:14px;min-width:0}
+    .alert-banner.active{display:flex}
+    .alert-symbol{font-size:27px;flex-shrink:0}
+    .alert-copy{min-width:0;flex:1}
+    .alert-heading{font-size:clamp(13px,1vw,20px);font-weight:800;letter-spacing:.04em}
+    .alert-details{font-size:clamp(11px,.8vw,15px);color:#f0c8ae;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .alert-link{color:#ffe2b2;text-decoration:underline;font-size:clamp(11px,.75vw,14px);white-space:nowrap}
+    .alert-banner.severe{background:linear-gradient(100deg,#862b2b,#41202a);border-color:#ff8989}
+    /* v3: Clock featured, outage map expanded, compact weather information tiles */
+    .clock-panel{justify-content:center;align-items:center;gap:clamp(8px,1.2vh,16px);padding:clamp(10px,1.2vw,22px)}
+    .clock-panel .clockgroup{width:100%;text-align:center;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:clamp(6px,1vh,12px);margin-top:0}
+    .clock-panel .clock{display:flex;align-items:flex-start;justify-content:center;gap:clamp(4px,.7vw,14px);font-size:clamp(80px,10.1vw,188px);line-height:.92;letter-spacing:-.065em;font-weight:650}
+    .clock-panel .clock small{font-size:.27em;line-height:1.05;letter-spacing:0;margin-top:.08em;color:#83a5c0;font-weight:500}
+    .clock-panel .date{font-size:clamp(18px,1.6vw,30px);color:#aed1ed;font-weight:400;margin:0;text-align:center}
+    .metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(6px,.45vw,10px);margin:0 clamp(12px,1vw,20px) clamp(6px,.5vw,10px);padding-top:clamp(4px,.4vw,8px);align-content:start}
+    .metric,.metric:nth-child(even){border:0;padding:clamp(8px,.65vw,12px);background:#1a2a3b;border-radius:10px;display:flex;flex-direction:column;justify-content:center;gap:clamp(4px,.25vw,7px)}
+    .metric-name{font-size:clamp(10px,.68vw,13px);line-height:1.2;color:#9db9d1}
+    .metric-value{font-size:clamp(18px,1.45vw,28px);margin:0;letter-spacing:-.02em}
+    .weather-main{flex-shrink:0;gap:clamp(12px,1.1vw,20px);padding:clamp(6px,.55vw,12px) clamp(16px,1.1vw,24px) clamp(4px,.35vw,8px)}
+    .weather-symbol{min-width:1.1em;font-size:clamp(44px,3.7vw,72px)}
+    .temp{font-size:clamp(56px,4.5vw,90px)}
+    .condition{margin-top:2px}
+    .weather-location{font-size:clamp(11px,.8vw,15px);color:#83a5c0;letter-spacing:.12em;text-transform:uppercase;margin-top:5px}
+    .weather-bottom{flex-shrink:0;padding:clamp(7px,.55vw,10px) clamp(16px,1.1vw,22px);font-size:clamp(10px,.68vw,13px)}
+    @media(max-height:820px) and (min-width:851px){.metric,.metric:nth-child(even){padding:5px 9px;gap:2px}.weather-main{padding:5px 18px}.temp{font-size:clamp(44px,3.9vw,76px)}.clock-panel .clock{font-size:clamp(72px,9.6vw,176px)}.clock-panel .date{font-size:clamp(16px,1.45vw,26px)}}
+    @media(max-width:850px){body{overflow:auto}.screen{height:auto;min-height:100dvh}.bodygrid{grid-template-columns:1fr;grid-template-rows:auto auto}.leftstack{grid-template-rows:250px 370px}.rightstack{grid-template-rows:370px 340px}.rightstack.has-alerts{grid-template-rows:370px auto 340px}.weather-main{padding-top:20px}.metrics{min-height:210px}.clock-panel .clock{font-size:clamp(54px,10vw,100px)}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}footer{flex-wrap:wrap}}
+    @media(max-height:730px) and (min-width:851px){.screen{gap:8px;padding:10px}.weather-main{padding-top:2px;padding-bottom:2px}.metric{padding-top:1px;padding-bottom:1px}.panel-head{padding-top:8px}.map-wrap{margin:7px}.weather-bottom{padding-top:4px;padding-bottom:4px}.clock-panel{padding:12px}.clock-panel .clockgroup{gap:4px}}
+
+    /* v5: fullscreen map canvases, compact landscape weather + persistent alert strip */
+    .rightstack,.rightstack.has-alerts{grid-template-rows:minmax(0,1fr) auto minmax(0,1.05fr)}
+    .map-panel .map-wrap,.radar-panel .map-wrap{margin:0;border-radius:inherit;flex:1}
+    .weather{display:flex;flex-direction:column}
+    .weather-content{padding-top:clamp(12px,1vw,22px)}
+    .weather-main{justify-content:flex-start;padding-top:clamp(6px,.6vw,14px)}
+    .weather-location{margin-top:clamp(3px,.35vw,8px);font-size:clamp(11px,.85vw,17px);color:#a6c6df;text-transform:none;letter-spacing:.02em;text-align:center}
+    .weather .panel-head{padding:clamp(10px,.85vw,17px) clamp(14px,1vw,22px) 5px}
+    .weather-content{display:grid;grid-template-columns:minmax(0,36%) minmax(0,1fr);gap:clamp(8px,.7vw,14px);padding:clamp(6px,.5vw,10px) clamp(12px,1vw,20px) clamp(10px,.7vw,14px);flex:1;min-height:0;align-items:stretch}
+    .weather-main{padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(5px,.7vh,12px);min-width:0}
+    .weather-symbol{font-size:clamp(42px,4vw,76px);min-width:0}
+    .temp{font-size:clamp(58px,5.1vw,100px);line-height:1;text-align:center}
+    .condition{font-size:clamp(13px,1.08vw,20px);text-align:center;margin:0}
+    .metrics{border-top:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:clamp(5px,.4vw,9px);margin:0;padding:0;min-height:0;align-content:stretch}
+    .metric,.metric:nth-child(even){padding:clamp(5px,.48vw,10px);min-height:0;gap:clamp(2px,.3vh,6px);justify-content:center}
+    .metric-name{font-size:clamp(10px,.73vw,14px)}
+    .metric-value{font-size:clamp(18px,1.52vw,30px)}
+    .alert-banner{display:flex;min-height:clamp(47px,5.1vh,76px);background:#182d35;border-color:#36594e;padding:clamp(8px,.65vw,13px) clamp(14px,1vw,20px)}
+    .alert-banner.severe{background:linear-gradient(100deg,#862b2b,#41202a);border-color:#ff8989}
+    .alert-symbol{font-size:clamp(19px,1.3vw,26px);color:#95d5bb}
+    .alert-banner.severe .alert-symbol{color:#fff}
+    .alert-heading{font-size:clamp(12px,.93vw,17px)}
+    .alert-details{font-size:clamp(10px,.74vw,14px);color:#bed3ca}
+    .alert-link[hidden]{display:none}
+    .footer-health{white-space:nowrap}
+    @media (min-width:851px) and (max-height:820px){.weather-content{padding:3px 10px 8px}.weather .panel-head{padding-top:7px}.weather-symbol{font-size:clamp(32px,3vw,55px)}.temp{font-size:clamp(45px,4.2vw,78px)}.metric,.metric:nth-child(even){padding:3px 8px;gap:2px}.metric-value{font-size:clamp(16px,1.35vw,25px)}.condition{font-size:clamp(11px,.93vw,17px)}}
+    @media (max-width:850px){.rightstack,.rightstack.has-alerts{grid-template-rows:380px auto 340px}.weather-content{grid-template-columns:36% 1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr));min-height:0}footer{flex-wrap:wrap}.footer-health{white-space:normal}}
+    /* v7: give the clock and temperature digits breathing room */
+    .clock-panel .clock{letter-spacing:.005em;gap:clamp(10px,1.1vw,22px);font-size:clamp(72px,9.35vw,176px)}
+    .clock-panel .clock > span{letter-spacing:.012em;white-space:nowrap}
+    .clock-panel .clock small{letter-spacing:.02em;margin-top:.10em}
+    .temp{letter-spacing:.025em;font-kerning:normal}
+    @media (min-width:851px) and (max-height:820px){.clock-panel .clock{font-size:clamp(68px,8.9vw,162px)}}
+    @media (max-width:850px){.clock-panel .clock{font-size:clamp(50px,9vw,95px);gap:8px}}
+  </style>
+</head>
+<body>
+<main class="screen">
+  <section class="bodygrid" aria-label="Live Kalispell TV information">
+    <div class="leftstack">
+      <article class="panel clock-panel" aria-label="Kalispell date and time">
+        <div class="clockgroup">
+          <div class="clock" aria-label="Local 24 hour time"><span id="clock">--:--</span><small id="seconds">--</small></div>
+          <div class="date" id="date">Loading local date…</div>
+          
+        </div>
+      </article>
+    <article class="panel map-panel">
+      
+      <div class="map-wrap"><iframe title="Flathead Electric Cooperative outage map" loading="eager" referrerpolicy="no-referrer" src="https://outage.flathead.coop:8181/"></iframe></div>
+    </article>
+
+    </div>
+    <div class="rightstack" id="rightstack">
+    <article class="panel weather">
+
+      <div class="weather-content"><div class="weather-main"><div class="weather-symbol" id="weather-icon" aria-hidden="true">◌</div><div class="temp" id="temp">--°</div><div class="condition" id="condition">Connecting to weather service…</div><div class="weather-location">Kalispell, Montana</div></div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-name">Today's High / Low</div><div class="metric-value" id="highlow">--° / --°</div></div>
+        <div class="metric"><div class="metric-name">Wind</div><div class="metric-value" id="wind">-- <em>mph</em></div></div>
+        <div class="metric"><div class="metric-name">Humidity</div><div class="metric-value" id="humidity">--%</div></div>
+        <div class="metric"><div class="metric-name">Precipitation Chance</div><div class="metric-value" id="precip">--%</div></div>
+        <div class="metric"><div class="metric-name">Sunrise</div><div class="metric-value" id="sunrise">--:--</div></div>
+        <div class="metric"><div class="metric-name">Sunset</div><div class="metric-value" id="sunset">--:--</div></div>
+      </div>
+      </div>
+    </article>
+
+      <aside class="alert-banner" id="alert-banner" role="status" aria-live="polite" aria-label="Active National Weather Service alerts">
+        <span class="alert-symbol" id="alert-symbol" aria-hidden="true">✓</span>
+        <div class="alert-copy"><div class="alert-heading" id="alert-heading">CHECKING WEATHER ALERTS</div><div class="alert-details" id="alert-details">Waiting for National Weather Service response</div></div>
+        <a class="alert-link" id="alert-link" hidden target="_blank" rel="noopener noreferrer" href="https://www.weather.gov/mso/">DETAILS ↗</a>
+      </aside>
+    <article class="panel radar-panel">
+      
+      <div class="map-wrap"><iframe title="Windy live weather radar over northwest Montana" loading="eager" src="https://embed.windy.com/embed2.html?lat=48.198&lon=-114.312&detailLat=48.198&detailLon=-114.312&width=1200&height=400&zoom=8&level=surface&overlay=radar&product=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=mph&metricTemp=%C2%B0F&radarRange=-1&play=1" allow="autoplay" allowfullscreen></iframe></div>
+    </article>
+    </div>
+  </section>
+  <footer><span>Weather: <a href="https://www.weather.gov/" target="_blank" rel="noopener">NOAA/NWS</a> primary · <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> fallback · Outages: <a href="https://www.flatheadelectric.com/outage/" target="_blank" rel="noopener">Flathead Electric</a> · Radar: <a href="https://www.windy.com/" target="_blank" rel="noopener">Windy</a></span><span class="footer-health"><span id="weather-status-dot" class="status-dot"></span><span id="weather-status">Weather connecting</span> · <span id="updated">Last update --:--</span> · <span id="alert-status">Alerts checking</span> · Refresh: 5 min</span></footer>
+</main>
+<script>
+  'use strict';
+  const TZ='America/Denver';
+  const $=id=>document.getElementById(id);
+  const timeFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  const dateFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const clockFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+  function clockTick(){let now=new Date();let parts=clockFmt.formatToParts(now);let val=x=>parts.find(p=>p.type===x)?.value??'00';$('clock').textContent=`${val('hour')}:${val('minute')}`;$('seconds').textContent=val('second');$('date').textContent=dateFmt.format(now)}
+  clockTick();setInterval(clockTick,1000);
+  const WEATHER_URL='https://api.open-meteo.com/v1/forecast?latitude=48.1987&longitude=-114.3129&current=temperature_2m,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=precipitation_probability&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FDenver&forecast_days=2';
+  const compass=d=>['N','NE','E','SE','S','SW','W','NW'][Math.round((d%360)/45)%8];
+  const txt=(v,suffix='')=>Number.isFinite(v)?`${Math.round(v)}${suffix}`:'--';
+  const weatherLookup=(code,isDay)=>{
+    if(code===0)return[isDay?'☀':'☾','Clear sky'];
+    if(code===1)return[isDay?'🌤':'☾','Mainly clear'];
+    if(code===2)return['⛅','Partly cloudy'];
+    if(code===3)return['☁','Overcast'];
+    if([45,48].includes(code))return['≋','Foggy'];
+    if([51,53,55,56,57].includes(code))return['🌧','Drizzle'];
+    if([61,63,65,66,67,80,81,82].includes(code))return['🌧','Rain'];
+    if([71,73,75,77,85,86].includes(code))return['❄','Snow'];
+    if([95,96,99].includes(code))return['⛈','Thunderstorms'];
+    return['◌','Conditions unavailable'];
+  };
+  function precipitationProbability(data){
+    const times=data.hourly?.time??[],vals=data.hourly?.precipitation_probability??[];
+    // Open-Meteo hourly timestamps are Kalispell-local; find the nearest local hour.
+    const key=new Intl.DateTimeFormat('sv-SE',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hourCycle:'h23'}).format(new Date()).replace(' ','T');
+    let index=times.indexOf(key+':00');
+    if(index<0)index=times.findIndex(t=>t>=key);
+    return index>=0?vals[index]:null;
+  }
+  let weatherLastSuccessful=0;
+  async function fetchJson(url,timeoutMs=14000){
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);
+    try{
+      const response=await fetch(url,{cache:'no-store',signal:controller.signal,headers:{Accept:'application/json'}});
+      if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    }finally{clearTimeout(timer)}
+  }
+  function setWeatherStatus(message,ok=false){
+    $('weather-status').textContent=message;
+    $('weather-status-dot').className='status-dot '+(ok?'live':'error');
+  }
+  function windInfo(speed,direction){
+    const bearing=Number.isFinite(direction)?compass(direction):'';
+    $('wind').innerHTML=`${txt(speed)} <em>mph ${bearing}</em>`;
+  }
+  function renderOpenMeteo(data){
+    const c=data.current,d=data.daily;
+    if(!c||!d||!Number.isFinite(c.temperature_2m))throw new Error('Missing current temperature');
+    const [icon,condition]=weatherLookup(c.weather_code,c.is_day===1);
+    $('weather-icon').textContent=icon;$('temp').textContent=txt(c.temperature_2m,'°');$('condition').textContent=condition;
+    $('highlow').textContent=`${txt(d.temperature_2m_max?.[0],'°')} / ${txt(d.temperature_2m_min?.[0],'°')}`;
+    windInfo(c.wind_speed_10m,c.wind_direction_10m);
+    $('humidity').textContent=txt(c.relative_humidity_2m,'%');$('precip').textContent=txt(precipitationProbability(data),'%');
+    $('sunrise').textContent=d.sunrise?.[0]?.split('T')[1]?.slice(0,5)??'--:--';
+    $('sunset').textContent=d.sunset?.[0]?.split('T')[1]?.slice(0,5)??'--:--';
+  }
+  // If Open-Meteo cannot be reached, NWS supplies current forecast conditions and high/low.
+  // Unavailable fields stay as dashes instead of showing made-up measurements.
+  async function renderNwsPrimary(){
+    const point=await fetchJson('https://api.weather.gov/points/48.1987,-114.3129');
+    const hourlyUrl=point.properties?.forecastHourly;
+    const dailyUrl=point.properties?.forecast;
+    if(!hourlyUrl||!dailyUrl)throw new Error('NWS location lookup unavailable');
+    const [hourly,daily]=await Promise.all([fetchJson(hourlyUrl),fetchJson(dailyUrl)]);
+    const h=hourly.properties?.periods?.[0],periods=daily.properties?.periods??[];
+    if(!h||!Number.isFinite(h.temperature))throw new Error('NWS forecast missing');
+    const isDay=h.isDaytime;
+    const text=h.shortForecast||'Forecast conditions';
+    const wx=String(text).toLowerCase();
+    $('weather-icon').textContent=/snow/.test(wx)?'❄':/thunder/.test(wx)?'⛈':/rain|shower/.test(wx)?'🌧':/cloud|overcast/.test(wx)?'☁':isDay?'☀':'☾';
+    let tempF=h.temperature;
+    if(h.temperatureUnit==='C')tempF=tempF*9/5+32;
+    $('temp').textContent=txt(tempF,'°');$('condition').textContent=text;
+    const highs=periods.filter(p=>p.isDaytime),lows=periods.filter(p=>!p.isDaytime);
+    $('highlow').textContent=`${txt(highs[0]?.temperature,'°')} / ${txt(lows[0]?.temperature,'°')}`;
+    const windMatch=String(h.windSpeed||'').match(/\d+/);
+    $('wind').textContent=(windMatch?windMatch[0]:'--')+' mph '+(h.windDirection||'');
+    const rh=h.relativeHumidity?.value;
+    $('humidity').textContent=txt(rh,'%');
+    $('precip').textContent=txt(h.probabilityOfPrecipitation?.value,'%');
+    $('sunrise').textContent='--:--';$('sunset').textContent='--:--';
+  }
+  // Sunrise/sunset computed locally with NOAA's published solar equations.
+  // Open-Meteo is consulted only if the NOAA/NWS forecast itself fails.
+  function calculateSolarTimes(){
+    const dateParts = new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date());
+    const field = k => Number(dateParts.find(p=>p.type===k).value);
+    const y=field('year'),m=field('month'),d=field('day');
+    const n=Math.floor((Date.UTC(y,m-1,d)-Date.UTC(y,0,1))/86400000)+1;
+    const latitude=48.1987*Math.PI/180, longitude=-114.3129;
+    function solve(rise){
+      function attempt(t){
+        const gamma=2*Math.PI/365*(n-1+(t/60-720)/1440);
+        const e=229.18*(0.000075+0.001868*Math.cos(gamma)-0.032077*Math.sin(gamma)-0.014615*Math.cos(2*gamma)-0.040849*Math.sin(2*gamma));
+        const decl=0.006918-0.399912*Math.cos(gamma)+0.070257*Math.sin(gamma)-0.006758*Math.cos(2*gamma)+0.000907*Math.sin(2*gamma)-0.002697*Math.cos(3*gamma)+0.00148*Math.sin(3*gamma);
+        const argument=(Math.cos(90.833*Math.PI/180)/(Math.cos(latitude)*Math.cos(decl))-Math.tan(latitude)*Math.tan(decl));
+        if(argument>1||argument< -1)return NaN;
+        const hourAngle=Math.acos(argument)*180/Math.PI;
+        return 720-4*(longitude+(rise?hourAngle:-hourAngle))-e;
+      }
+      let t=attempt(720);
+      if(Number.isFinite(t))t=attempt(t);
+      if(!Number.isFinite(t))return '--:--';
+      const instant=new Date(Date.UTC(y,m-1,d)+Math.round(t)*60000);
+      return new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(instant);
+    }
+    $('sunrise').textContent=solve(true);
+    $('sunset').textContent=solve(false);
+  }
+  let weatherRefreshing=false;
+  async function refreshWeather(){
+    if(weatherRefreshing)return;
+    weatherRefreshing=true;
+    let primaryError;
+    try{
+      try{
+        await renderNwsPrimary();
+        weatherLastSuccessful=Date.now();
+        $('updated').textContent=`Updated ${timeFmt.format(new Date())}`;
+        setWeatherStatus('Weather live · NOAA/NWS',true);
+        // Locally compute solar times using NOAA equations.
+        calculateSolarTimes();
+        return;
+      }catch(error){primaryError=error;console.warn('NOAA/NWS unavailable:',error)}
+      try{
+        renderOpenMeteo(await fetchJson(WEATHER_URL));
+        weatherLastSuccessful=Date.now();
+        $('updated').textContent=`Updated ${timeFmt.format(new Date())}`;
+        setWeatherStatus('Weather live · Open-Meteo backup',true);
+        return;
+      }catch(error){
+        console.warn('Open-Meteo backup unavailable:',error);
+        const reason=`NOAA: ${primaryError?.message||'request failed'}; Open-Meteo: ${error?.message||'request failed'}`;
+        setWeatherStatus('Weather unavailable · '+reason);
+        if(!weatherLastSuccessful)$('condition').textContent='Weather services unavailable';
+      }
+    }finally{weatherRefreshing=false}
+  }
+  refreshWeather();setInterval(refreshWeather,5*60*1000);
+  // Retry shortly after initial page load in case the network is still connecting.
+  setTimeout(()=>{if(!weatherLastSuccessful)refreshWeather()},25000);
+  // NWS active alerts for Flathead County (MTC029).
+  // An unsuccessful response never silently clears an alert previously displayed.
+  const ALERTS_URL='https://api.weather.gov/alerts/active?zone=MTC029';
+  async function refreshAlerts(){
+    try{
+      const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),12000);
+      let response;
+      try{response=await fetch(ALERTS_URL,{headers:{Accept:'application/geo+json'},cache:'no-store',signal:controller.signal})}finally{clearTimeout(timer)}
+      if(!response.ok)throw new Error('NWS '+response.status);
+      const data=await response.json();
+      const now=Date.now();
+      const alerts=(data.features??[]).filter(f=>{
+        const a=f.properties??{};
+        return a.status==='Actual' && (!a.effective||Date.parse(a.effective)<=now) && (!a.expires||Date.parse(a.expires)>now) && (!a.ends||Date.parse(a.ends)>now);
+      }).sort((a,b)=>{
+        const rank={Extreme:4,Severe:3,Moderate:2,Minor:1,Unknown:0};
+        return (rank[b.properties.severity]??0)-(rank[a.properties.severity]??0);
+      });
+      const banner=$('alert-banner');
+      $('alert-status').textContent='Alerts current';
+      if(!alerts.length){banner.classList.remove('severe');$('alert-symbol').textContent='✓';$('alert-heading').textContent='NO ACTIVE ALERTS';$('alert-details').textContent='No watches, warnings, or advisories.';$('alert-link').hidden=true;return}
+      const a=alerts[0].properties;
+      $('alert-heading').textContent=(alerts.length>1?`${alerts.length} ACTIVE ALERTS · `:'')+(a.event??'WEATHER ALERT').toUpperCase();
+      $('alert-details').textContent=a.headline||a.areaDesc||'Active National Weather Service advisory for Flathead County';
+      $('alert-link').href=(a['@id']||a.id||alerts[0].id||'https://www.weather.gov/mso/');
+      $('alert-symbol').textContent='⚠';$('alert-link').hidden=false;
+      banner.classList.toggle('severe',['Severe','Extreme'].includes(a.severity));
+    }catch(error){$('alert-status').textContent='Alerts unavailable';if($('alert-heading').textContent==='CHECKING WEATHER ALERTS'){$('alert-heading').textContent='ALERT STATUS UNAVAILABLE';$('alert-details').textContent='Unable to verify current NWS alerts';$('alert-symbol').textContent='?'}console.warn('Weather alerts update unsuccessful:',error)}
+  }
+  refreshAlerts();setInterval(refreshAlerts,2*60*1000);
+
+  // Reload the static dashboard every six hours to keep embedded maps and a long-running TV browser fresh.
+  setTimeout(()=>location.reload(),6*60*60*1000);
+</script>
+</body>
+</html>
