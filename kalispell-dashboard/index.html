@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a111b">
   <meta name="description" content="Kalispell, Montana live weather, power outage map and radar TV dashboard">
   <title>Kalispell | Live Information Dashboard</title>
-  <!-- Kalispell TV Dashboard v1.0 -->
+  <!-- Kalispell TV Dashboard v1.1 -->
   <style>
     :root{color-scheme:dark;--bg:#09111b;--panel:#111e2d;--border:#243548;--soft:#9fb1c3;--white:#f3f7fc;--accent:#73c4eb;--ok:#8bd5b1;--warn:#f8c681}
     *{box-sizing:border-box}
@@ -130,10 +130,57 @@
     .temp{letter-spacing:.025em;font-kerning:normal}
     @media (min-width:851px) and (max-height:820px){.clock-panel .clock{font-size:clamp(68px,8.9vw,162px)}}
     @media (max-width:850px){.clock-panel .clock{font-size:clamp(50px,9vw,95px);gap:8px}}
+
+
+    /* v1.1: compact health header and larger TV typography */
+    .screen{grid-template-rows:auto minmax(0,1fr);gap:clamp(4px,.35vw,7px)}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:9px;min-height:22px;color:#c6d7e6;font-size:clamp(11px,.72vw,14px);white-space:nowrap}
+    .topbar-status,.topbar-controls{display:flex;align-items:center;gap:clamp(7px,.7vw,13px);min-width:0}
+    .topbar-source{color:#bfd4e7;overflow:hidden;text-overflow:ellipsis;max-width:270px}
+    .topbar-updated{color:#8eaac3}
+    .health-item{display:inline-flex;gap:6px;align-items:center;font-weight:600}
+    .health-light{display:inline-block;width:7px;height:7px;flex:none;border-radius:50%;background:#e28c57;box-shadow:0 0 0 2px #ffffff12}
+    .health-light.good{background:#5de39c;box-shadow:0 0 7px #5de39c69}
+    .health-light.bad{background:#ef646c;box-shadow:0 0 7px #ef646c65}
+    .weather-location{font-size:clamp(14px,1.04vw,21px)}
+    .condition{font-size:clamp(16px,1.24vw,24px)}
+    .metric-name{font-size:clamp(13px,.95vw,19px);line-height:1.2}
+    .metric-value{font-size:clamp(21px,1.75vw,36px)}
+    .metric,.metric:nth-child(even){padding:clamp(6px,.58vw,12px)}
+    .alert-heading{font-size:clamp(14px,1.08vw,21px)}
+    .alert-details{font-size:clamp(12px,.88vw,17px)}
+    .weather-content{gap:clamp(8px,.8vw,15px)}
+    @media(min-width:851px) and (max-height:820px){
+      .metric-name{font-size:clamp(12px,.86vw,16px)}
+      .metric-value{font-size:clamp(18px,1.55vw,30px)}
+      .weather-location{font-size:clamp(12px,.94vw,18px)}
+      .condition{font-size:clamp(14px,1.06vw,20px)}
+    }
+    @media(max-width:1120px){.topbar{gap:6px}.topbar-status{gap:8px}.topbar-controls{gap:7px}.topbar-source{max-width:155px}}
+    @media(max-width:850px){.screen{grid-template-rows:auto auto}.topbar-status{flex-wrap:wrap}.topbar-controls{flex-wrap:wrap}}
+    /* Pixel shifting is always active on the content panels; the header stays fixed. */
+    .bodygrid{transition:transform 1.5s ease-in-out;will-change:transform}
+
   </style>
 </head>
 <body>
 <main class="screen">
+  <header class="topbar" aria-label="Dashboard health and controls">
+    <div class="topbar-status">
+      <span class="health-item"><i class="health-light" id="clock-light"></i>Clock</span>
+      <span class="health-item" title="Green when recent weather data is available"><i class="health-light" id="weather-light"></i>Weather</span>
+      <span class="health-item"><i class="health-light" id="alert-light"></i>Alerts</span>
+      <span class="health-item" title="Frame loaded; does not verify outage provider data"><i class="health-light" id="outage-light"></i>Outages</span>
+      <span class="health-item" title="Frame loaded; does not verify radar provider data"><i class="health-light" id="radar-light"></i>Radar</span>
+    </div>
+    <div class="topbar-controls">
+      <span id="weather-status" class="topbar-source">Weather connecting</span>
+      <span id="updated" class="topbar-updated">Last update --:--</span>
+      <span id="alert-status" class="offscreen">Alerts checking</span>
+      <span id="weather-status-dot" class="offscreen"></span>
+    </div>
+  </header>
+
   <section class="bodygrid" aria-label="Live Kalispell TV information">
     <div class="leftstack">
       <article class="panel clock-panel" aria-label="Kalispell date and time">
@@ -145,7 +192,7 @@
       </article>
     <article class="panel map-panel">
       
-      <div class="map-wrap"><iframe title="Flathead Electric Cooperative outage map" loading="eager" referrerpolicy="no-referrer" src="https://outage.flathead.coop:8181/"></iframe></div>
+      <div class="map-wrap"><iframe id="outage-frame" title="Flathead Electric Cooperative outage map" loading="eager" referrerpolicy="no-referrer" src="https://outage.flathead.coop:8181/"></iframe></div>
     </article>
 
     </div>
@@ -171,11 +218,11 @@
       </aside>
     <article class="panel radar-panel">
       
-      <div class="map-wrap"><iframe title="Windy live weather radar over northwest Montana" loading="eager" src="https://embed.windy.com/embed2.html?lat=48.198&lon=-114.312&detailLat=48.198&detailLon=-114.312&width=1200&height=400&zoom=8&level=surface&overlay=radar&product=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=mph&metricTemp=%C2%B0F&radarRange=-1&play=1" allow="autoplay" allowfullscreen></iframe></div>
+      <div class="map-wrap"><iframe id="radar-frame" title="Windy live weather radar over northwest Montana" loading="eager" src="https://embed.windy.com/embed2.html?lat=48.198&lon=-114.312&detailLat=48.198&detailLon=-114.312&width=1200&height=400&zoom=8&level=surface&overlay=radar&product=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=mph&metricTemp=%C2%B0F&radarRange=-1&play=1" allow="autoplay" allowfullscreen></iframe></div>
     </article>
     </div>
   </section>
-  <footer><span>Weather: <a href="https://www.weather.gov/" target="_blank" rel="noopener">NOAA/NWS</a> primary · <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> fallback · Outages: <a href="https://www.flatheadelectric.com/outage/" target="_blank" rel="noopener">Flathead Electric</a> · Radar: <a href="https://www.windy.com/" target="_blank" rel="noopener">Windy</a></span><span class="footer-health"><span id="weather-status-dot" class="status-dot"></span><span id="weather-status">Weather connecting</span> · <span id="updated">Last update --:--</span> · <span id="alert-status">Alerts checking</span> · Refresh: 5 min</span></footer>
+
 </main>
 <script>
   'use strict';
@@ -352,6 +399,40 @@
     }catch(error){$('alert-status').textContent='Alerts unavailable';if($('alert-heading').textContent==='CHECKING WEATHER ALERTS'){$('alert-heading').textContent='ALERT STATUS UNAVAILABLE';$('alert-details').textContent='Unable to verify current NWS alerts';$('alert-symbol').textContent='?'}console.warn('Weather alerts update unsuccessful:',error)}
   }
   refreshAlerts();setInterval(refreshAlerts,2*60*1000);
+
+
+  // Health signals: API data freshness and alert API health are checked directly.
+  // Cross-origin iframe 'load' means its frame loaded, not that its contents are healthy.
+  function light(id,state){const el=$(id);if(el)el.className='health-light '+(state===true?'good':state===false?'bad':'')}
+  light('clock-light',true);
+  let alertSuccessfulAt=0;
+  const oldAlertStatus=$('alert-status');
+  new MutationObserver(()=>{
+    if(oldAlertStatus.textContent==='Alerts current')alertSuccessfulAt=Date.now();
+    light('alert-light',oldAlertStatus.textContent==='Alerts current');
+  }).observe(oldAlertStatus,{childList:true,characterData:true,subtree:true});
+  for(const [frameId,lightId] of [['outage-frame','outage-light'],['radar-frame','radar-light']]){
+    const frame=$(frameId);
+    frame.addEventListener('load',()=>light(lightId,true));
+    frame.addEventListener('error',()=>light(lightId,false));
+    // A timeout means loading cannot be confirmed, not necessarily an outage.
+    setTimeout(()=>{if(!$(lightId).classList.contains('good'))light(lightId,false)},30000);
+  }
+  function refreshHealth(){
+    light('weather-light',!!weatherLastSuccessful && Date.now()-weatherLastSuccessful<15*60*1000);
+    if(alertSuccessfulAt && Date.now()-alertSuccessfulAt>10*60*1000)light('alert-light',false);
+  }
+  setInterval(refreshHealth,10000);
+  refreshHealth();
+  // Always-on subtle pixel shifting: reduces static exposure, but cannot prevent burn-in.
+  let shiftStep=0;
+  const shifts=[[0,0],[3,0],[3,3],[0,3],[-3,3],[-3,0],[-3,-3],[0,-3],[3,-3]];
+  function applyShift(){
+    const [x,y]=shifts[shiftStep%shifts.length];
+    document.querySelector('.bodygrid').style.transform=`translate(${x}px,${y}px)`;
+  }
+  setInterval(()=>{shiftStep++;applyShift()},120000);
+  applyShift();
 
   // Reload the static dashboard every six hours to keep embedded maps and a long-running TV browser fresh.
   setTimeout(()=>location.reload(),6*60*60*1000);

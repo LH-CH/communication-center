@@ -1,6 +1,6 @@
 # Kalispell TV Dashboard
 
-**Version 1.0** · Static, fullscreen TV dashboard for Kalispell, Montana.
+**Version 1.1** · Static, fullscreen TV dashboard for Kalispell, Montana.
 
 A dark, four-quadrant dashboard optimized for a 16:9 TV display. It shows a local 24-hour clock, current weather, Flathead Electric outages, regional radar, and a persistent Flathead County weather-alert strip.
 
@@ -11,7 +11,7 @@ A dark, four-quadrant dashboard optimized for a 16:9 TV display. It shows a loca
 - **Top right:** current temperature, conditions and location, with high/low, wind, humidity, precipitation chance, sunrise and sunset.
 - **Between the right panels:** NOAA/NWS weather alerts for **Flathead County, MT** (`MTC029`). When the alert API successfully confirms no alerts, the strip says **“No watches, warnings, or advisories.”**
 - **Bottom right:** Windy regional radar embed, with autoplay requested.
-- **Footer:** data-source credits, live weather source/connection status, update time, and alert connection status.
+- **Header:** connection lights for clock, weather, alerts, outage-map frame and radar frame; weather source/update status; always-on automatic pixel shifting.
 
 ## Data sources
 
@@ -61,3 +61,18 @@ Updating the dashboard only requires replacing `index.html` and committing the c
 - `README.md` — setup, source descriptions, refresh intervals and limitations.
 
 No build tools, backend, or user-supplied API key are required.
+
+
+## Version 1.1 changes
+
+- Slightly larger weather descriptions, location, metric labels, and values for readability across a TV room.
+- Footer moved to a small, streamlined top header with green/red indicators for Clock, Weather, Alerts, Outages and Radar.
+- Weather indicator is green when successful weather data is less than 15 minutes old. Alert indicator reflects recent successful alert polling.
+- Outage and radar indicators turn green when their embedded **iframes load**, not when the third-party service confirms usable data. Cross-origin browser restrictions prevent the dashboard from inspecting the actual map contents; a green light is **not proof** that the outage map or radar is up-to-date.
+- Pixel shifting runs automatically every two minutes without a toggle. It may reduce image retention but cannot prevent burn-in. Use built-in TV protections as well.
+
+### Additional layout refinements
+
+- Reduced header height and spacing to give more room to the four content panels.
+- Removed the pixel-shift toggle. Subtle panel shifting runs automatically every two minutes. There is no setting or stored browser preference.
+- Pixel shifting does not guarantee protection against burn-in; use TV hardware protections too.
