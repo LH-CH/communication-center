@@ -1,93 +1,42 @@
-# Kalispell TV Dashboard
+# Kalispell TV Dashboard — Release Notes
 
-**Version 1.2** · Static, fullscreen TV dashboard for Kalispell, Montana.
+A running record of dashboard changes. Current version: **1.2**.
 
-A dark, four-quadrant dashboard optimized for a 16:9 TV display. It shows a local 24-hour clock, current weather, Flathead Electric outages, regional radar, and a persistent Flathead County weather-alert strip.
+## v1.2 — Weather, alerts, audio and reliability
 
-## Layout
+### Latest updates
+- Replaced the air-quality widget with **Visibility**, using NOAA/NWS observations from KGPI (Glacier Park International Airport) in miles. Missing observations are shown as unavailable, rather than estimated.
+- Added a subtle **Feels like** temperature below the current temperature. Uses wind-chill or heat-index calculations with NOAA/NWS weather data; the Open-Meteo weather fallback can provide apparent temperature.
+- Kept the current temperature vertically centered, with the weather icon beside the condition text.
+- Standardized and enlarged weather tile labels and values for readability on a TV.
+- Split source attribution in the top header: weather source and visibility source are identified independently.
+- Changed the clear-alert banner to **NO ACTIVE WEATHER ALERTS**, preserving the taller alert strip.
 
-- **Top left:** Kalispell local time (24-hour `HH:MM`, small seconds) and date.
-- **Bottom left:** embedded Flathead Electric Cooperative outage map.
-- **Top right:** current temperature, conditions and location, with high/low, wind, humidity, precipitation chance, sunrise and sunset.
-- **Between the right panels:** NOAA/NWS weather alerts for **Flathead County, MT** (`MTC029`). When the alert API successfully confirms no alerts, the strip says **“No watches, warnings, or advisories.”**
-- **Bottom right:** Windy regional radar embed, with autoplay requested.
-- **Header:** connection lights for clock, weather, alerts, outage-map frame and radar frame; weather source/update status; always-on automatic pixel shifting.
+### Earlier v1.2 updates
+- Added severity-based Flathead County weather alerts: warnings in red, watches in amber, and advisories in yellow. Multiple active alerts rotate.
+- Added separate sounds for component status failures, new watches/advisories, and new or upgraded warnings. Unchanged alerts do not repeatedly chime.
+- Replaced the audio text button with a speaker icon. Green indicates enabled audio; a flashing muted icon requests interaction when a browser blocks autoplay.
+- Added stale-weather detection, retry/backoff for data requests, and recovery checks for delayed updates.
+- Combined sunrise and sunset into one weather tile.
+- Enlarged the weather headings and condition descriptions. Added the date to the last successful weather update time.
+- Added a subtle brightness variation to complement always-on pixel shifting.
+- Evaluated AQI sources and tested an AirNow widget before replacing that tile with visibility.
 
-## Data sources
+## v1.1 — TV display refinement
+- Increased weather text sizes for better viewing distance.
+- Moved connection and data-source information from the footer into a compact top header.
+- Added health indicators for clock, weather, alerts, outage-map frame, and radar frame.
+- Made pixel shifting always on and removed its toggle; reduced the header height.
 
-| Information | Primary | Fallback / details |
-| --- | --- | --- |
-| Weather readings and forecast | NOAA / National Weather Service (`api.weather.gov`) | Open-Meteo (`api.open-meteo.com`) if NOAA weather retrieval fails |
-| Sunrise and sunset | Locally calculated with NOAA solar equations | May differ slightly from official published values |
-| Weather watches, warnings, advisories | NOAA / National Weather Service, Flathead County `MTC029` | No substitute alert provider; feed errors are indicated |
-| Power outages | Flathead Electric Cooperative outage website | Third-party iframe; provider may block embedding |
-| Radar imagery | Windy embedded radar | Separate radar provider; **not** NOAA/Open-Meteo |
+## v1.0 — Initial dashboard
+- Established the four-quadrant layout: Kalispell 24-hour clock, Flathead Electric outage map, current weather, and regional radar.
+- Integrated NOAA/NWS primary weather data, Open-Meteo weather fallback, and Flathead County weather alerts.
+- Added weather metrics including high/low, wind, humidity, precipitation probability, sunrise, and sunset.
+- Included automatic updates and a dark, TV-focused presentation.
 
-Weather values shown depend on the fields returned by the active source. Radar is separate from the weather-reading fallback sequence.
-
-## Automatic refresh
-
-| Service | Refresh |
-| --- | --- |
-| Clock | Every 1 second |
-| Weather | Every 5 minutes, plus an early retry if initial retrieval fails |
-| NWS alerts | Every 2 minutes |
-| Maps and radar | Managed by embedded providers |
-| Full page | Reloads every 6 hours |
-
-The page requires an internet connection. Status details appear in the footer. If a weather request fails, previously displayed readings may remain visible; check the footer to distinguish current from stale data.
-
-## Deploy to GitHub Pages
-
-1. Create a GitHub repository, for example `kalispell-tv-dashboard`.
-2. Upload **`index.html`** and **`README.md`** to the repository root.
-3. Commit the files to the default branch (`main`).
-4. Open **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, select **main** and **/(root)**, and save.
-5. Wait for GitHub Pages to publish. Open the provided site URL on your TV or browser and use fullscreen (usually **F11** on a computer).
-
-Updating the dashboard only requires replacing `index.html` and committing the change. GitHub Pages may take a short time to deploy; reload the TV page afterward.
-
-## TV/browser notes
-
-- Designed for 1920 × 1080 and similar 16:9 landscape screens. Browser zoom, TV overscan, and unusual resolutions may affect fit.
-- Allow network access to `api.weather.gov`, `api.open-meteo.com`, `outage.flathead.coop`, and `embed.windy.com`.
-- Flathead Electric may restrict embedding. An unavailable map does **not** necessarily mean there are no outages.
-- Windy autoplay (`play=1`) is a requested setting, not guaranteed on every TV browser; some browsers restrict autoplay.
-- This dashboard is informational and not a replacement for official emergency notifications or weather warnings.
-
-## Files
-
-- `index.html` — complete dashboard, including embedded CSS and JavaScript.
-- `README.md` — setup, source descriptions, refresh intervals and limitations.
-
-No build tools, backend, or user-supplied API key are required.
-
-
-## Version 1.1 changes
-
-- Slightly larger weather descriptions, location, metric labels, and values for readability across a TV room.
-- Footer moved to a small, streamlined top header with green/red indicators for Clock, Weather, Alerts, Outages and Radar.
-- Weather indicator is green when successful weather data is less than 15 minutes old. Alert indicator reflects recent successful alert polling.
-- Outage and radar indicators turn green when their embedded **iframes load**, not when the third-party service confirms usable data. Cross-origin browser restrictions prevent the dashboard from inspecting the actual map contents; a green light is **not proof** that the outage map or radar is up-to-date.
-- Pixel shifting runs automatically every two minutes without a toggle. It may reduce image retention but cannot prevent burn-in. Use built-in TV protections as well.
-
-### Additional layout refinements
-
-- Reduced header height and spacing to give more room to the four content panels.
-- Removed the pixel-shift toggle. Subtle panel shifting runs automatically every two minutes. There is no setting or stored browser preference.
-- Pixel shifting does not guarantee protection against burn-in; use TV hardware protections too.
-
-
-## Version 1.2: Audio notifications
-
-- Click **Enable sound** once after opening the dashboard. Browsers generally block automatic audio until a user gesture, and audio may need enabling again after a page reload, browser restart or TV power cycle. The button changes to **Sound on** after successful activation.
-- **Component failure:** Two descending tones play only when an indicator previously known green transitions to red. Initial startup/loading errors do not trigger a sound.
-- **New Flathead County NOAA weather alert:** A distinctive three-tone chime plays when a newly encountered alert ID appears after a successful prior alert check. Current alerts at first load establish the baseline without sound; previously known IDs are preserved in session storage across scheduled reloads where available.
-- Repeated polling of an unchanged failed status or the same alert does not repeat a tone. Audio is informational only and should not be relied upon as the sole emergency-warning method.
-- Due to cross-origin iframe restrictions, Outages/Radar health lights reflect iframe loading events, **not** actual outage/radar freshness.
-
-## Version 1.2 display refinements
-
-- Increased weather tile labels and current condition text for TV readability.
-- Weather last-updated timestamp includes Kalispell-local date and 24-hour time.
-- Removed the redundant weather status-dot element near the updated timestamp; the compact header still shows its main Weather health indicator.
+## Known limitations
+- Embedded outage-map and radar status lights can verify only that an iframe loaded, **not** that its underlying information is current.
+- The NOAA/NWS airport visibility reading may be unavailable or different from conditions elsewhere in Flathead County.
+- Browser autoplay policies may require interaction to enable audible alerts after a reload.
+- Pixel shifting and brightness adjustments can reduce static image retention but cannot guarantee prevention of burn-in.
+- This dashboard supplements, but does not replace, official emergency warning methods.

@@ -113,7 +113,7 @@
     .metric,.metric:nth-child(even){padding:clamp(5px,.48vw,10px);min-height:0;gap:clamp(2px,.3vh,6px);justify-content:center}
     .metric-name{font-size:clamp(10px,.73vw,14px)}
     .metric-value{font-size:clamp(18px,1.52vw,30px)}
-    .alert-banner{display:flex;min-height:clamp(47px,5.1vh,76px);background:#182d35;border-color:#36594e;padding:clamp(8px,.65vw,13px) clamp(14px,1vw,20px)}
+    .alert-banner{display:flex;min-height:clamp(67px,7vh,92px);background:#182d35;border-color:#36594e;padding:clamp(8px,.65vw,13px) clamp(14px,1vw,20px)}
     .alert-banner.severe{background:linear-gradient(100deg,#862b2b,#41202a);border-color:#ff8989}
     .alert-symbol{font-size:clamp(19px,1.3vw,26px);color:#95d5bb}
     .alert-banner.severe .alert-symbol{color:#fff}
@@ -169,6 +169,42 @@
       .metric-name{font-size:clamp(14px,1.04vw,19px)}
       .condition{font-size:clamp(17px,1.3vw,24px)}
     }
+
+    .solar-pair{font-size:clamp(17px,1.4vw,29px);letter-spacing:-.025em}
+    .solar-sep{color:#87a3ba}
+    .alert-banner.watch{background:linear-gradient(95deg,#55431b,#312e25);border-color:#e2be69}
+    .alert-banner.advisory{background:linear-gradient(95deg,#534d21,#302e23);border-color:#ddd278}
+    .alert-banner.severe{background:linear-gradient(100deg,#862b2b,#41202a);border-color:#ff8989}
+    .alert-banner.critical{background:linear-gradient(100deg,#a52626,#4b101b);border-color:#ff6666}
+    .stale-indicator{color:#e9b279!important}
+    .screen{filter:brightness(var(--screen-brightness,1))}
+    .audio-icon{width:31px;height:28px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;background:#253345;border:1px solid #4c5967;color:#f0ae7d;cursor:pointer;padding:4px}
+    .audio-icon .speaker-svg{width:20px;height:20px}
+    .audio-icon .speaker-wave{display:none}
+    .audio-icon .speaker-slash{display:block}
+    .audio-icon.audio-on{color:#80f0ae;background:#153f30;border-color:#319765;box-shadow:0 0 8px #38ce8244}
+    .audio-icon.audio-on .speaker-wave{display:block}
+    .audio-icon.audio-on .speaker-slash{display:none}
+    @keyframes soundAttention{0%,100%{background:#253345;box-shadow:none}50%{background:#743825;box-shadow:0 0 12px #f29b6388}}
+    .audio-icon.needs-audio{animation:soundAttention 1.65s ease-in-out infinite}
+    @media(prefers-reduced-motion:reduce){.audio-icon.needs-audio{animation:none;border-color:#f0ae7d}}
+  
+    /* v1.2 TV layout polish */
+    .weather-main{justify-content:center!important;align-items:center!important;gap:clamp(8px,.8vh,14px)!important;height:100%;min-height:0}
+    .condition-line{display:flex;align-items:center;justify-content:center;gap:clamp(9px,.8vw,16px);max-width:100%;text-align:center}
+    .condition-line .weather-symbol{font-size:clamp(28px,2.65vw,49px);min-width:0;line-height:1;flex-shrink:0}
+    .condition-line .condition{font-size:clamp(19px,1.5vw,27px);margin:0;font-weight:650}
+    .metrics .metric-name{font-size:clamp(15px,1.06vw,20px);font-weight:650;line-height:1.15}
+    .metrics .metric-value{font-size:clamp(22px,1.55vw,30px);font-weight:700;line-height:1.1}
+
+    .topbar-source{max-width:250px}
+    @media(min-width:851px) and (max-height:820px){.metrics .metric-name{font-size:clamp(13px,.98vw,18px)}.metrics .metric-value{font-size:clamp(19px,1.42vw,27px)}.condition-line .weather-symbol{font-size:clamp(25px,2.3vw,40px)}}
+
+
+    /* Official EPA AirNow iframe: scaled to fit the compact sixth weather tile. */
+
+    .feels-like{font-size:clamp(13px,1vw,19px);color:#9fb6c9;margin-top:-4px;font-weight:500;white-space:nowrap}
+    @media(max-height:820px) and (min-width:851px){.feels-like{font-size:clamp(12px,.86vw,16px)}}
   </style>
 </head>
 <body>
@@ -182,10 +218,11 @@
       <span class="health-item" title="Frame loaded; does not verify radar provider data"><i class="health-light" id="radar-light"></i>Radar</span>
     </div>
     <div class="topbar-controls">
-      <span id="weather-status" class="topbar-source">Weather connecting</span>
+      <span id="weather-status" class="topbar-source">Weather Source: Connecting</span>
+      <span id="visibility-source" class="topbar-source">Visibility: Connecting</span>
       <span id="updated" class="topbar-updated">Updated --</span>
       <span id="alert-status" class="offscreen">Alerts checking</span>
-      <button id="audio-enable" class="audio-enable" type="button" aria-label="Enable dashboard alarm sounds">Enable sound</button>
+      <button id="audio-enable" class="audio-icon needs-audio" type="button" aria-label="Enable dashboard alarm sounds" title="Click to enable alarm sounds" aria-pressed="false"><svg class="speaker-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path class="speaker-wave" d="M15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12"/><path class="speaker-slash" d="m16 9 5 6m0-6-5 6"/></svg></button>
     </div>
   </header>
 
@@ -207,14 +244,14 @@
     <div class="rightstack" id="rightstack">
     <article class="panel weather">
 
-      <div class="weather-content"><div class="weather-main"><div class="weather-symbol" id="weather-icon" aria-hidden="true">◌</div><div class="temp" id="temp">--°</div><div class="condition" id="condition">Connecting to weather service…</div><div class="weather-location">Kalispell, Montana</div></div>
+      <div class="weather-content"><div class="weather-main"><div class="temp" id="temp">--°</div><div class="feels-like" id="feels-like">Feels like --°</div><div class="condition-line"><span class="weather-symbol" id="weather-icon" aria-hidden="true">◌</span><span class="condition" id="condition">Connecting…</span></div><div class="weather-location">Kalispell, Montana</div></div>
       <div class="metrics">
         <div class="metric"><div class="metric-name">Today's High / Low</div><div class="metric-value" id="highlow">--° / --°</div></div>
         <div class="metric"><div class="metric-name">Wind</div><div class="metric-value" id="wind">-- <em>mph</em></div></div>
         <div class="metric"><div class="metric-name">Humidity</div><div class="metric-value" id="humidity">--%</div></div>
         <div class="metric"><div class="metric-name">Precipitation Chance</div><div class="metric-value" id="precip">--%</div></div>
-        <div class="metric"><div class="metric-name">Sunrise</div><div class="metric-value" id="sunrise">--:--</div></div>
-        <div class="metric"><div class="metric-name">Sunset</div><div class="metric-value" id="sunset">--:--</div></div>
+        <div class="metric"><div class="metric-name">Sunrise / Sunset</div><div class="metric-value solar-pair"><span id="sunrise">--:--</span><span class="solar-sep"> / </span><span id="sunset">--:--</span></div></div>
+        <div class="metric"><div class="metric-name">Visibility</div><div class="metric-value" id="visibility">-- <em>mi</em></div></div>
       </div>
       </div>
     </article>
@@ -248,32 +285,70 @@
     osc.connect(gain).connect(audioContext.destination);osc.start(start);osc.stop(start+duration+0.01);
   }
   function playSound(kind){
-    if(!audioReady||!audioContext||audioContext.state!=='running')return;
+    if(audioMuted||!audioReady||!audioContext||audioContext.state!=='running')return;
     const at=audioContext.currentTime+0.035;
     if(kind==='fault'){
       tone(440,at,0.19);tone(330,at+0.24,0.28);
     }else if(kind==='alert'){
       tone(660,at,0.19,0.16);tone(880,at+0.25,0.22,0.16);tone(1046,at+0.55,0.4,0.18);
+    }else if(kind==='warning'){
+      for(let k=0;k<3;k++){tone(850,at+k*.55,.23,.2);tone(630,at+k*.55+.26,.25,.2)}
     }
   }
-  soundButton.addEventListener('click',async()=>{
+  let audioMuted=false;
+  function showAudioStatus(){
+    const enabled=audioReady&&!audioMuted&&audioContext?.state==='running';
+    soundButton.classList.toggle('audio-on',enabled);
+    soundButton.classList.toggle('needs-audio',!enabled);
+    soundButton.setAttribute('aria-pressed',String(enabled));
+    soundButton.setAttribute('aria-label',enabled?'Mute dashboard alarm sounds':'Enable dashboard alarm sounds');
+    soundButton.title=enabled?'Sound on — click to mute':'Sound off — click to enable';
+  }
+  async function activateSound(){
     try{
+      if(!(window.AudioContext||window.webkitAudioContext))throw new Error('Web Audio not supported');
       audioContext??=new (window.AudioContext||window.webkitAudioContext)();
       await audioContext.resume();
       audioReady=audioContext.state==='running';
-      if(audioReady){soundButton.textContent='Sound on';soundButton.classList.add('ready');soundButton.title='Sound is enabled for this page session';}
-    }catch(e){soundButton.textContent='Sound blocked';console.warn('Audio activation failed',e)}
+    }catch(error){audioReady=false;console.warn('Audio activation unavailable:',error)}
+    showAudioStatus();
+  }
+  soundButton.addEventListener('click',()=>{
+    if(audioReady&&!audioMuted&&audioContext?.state==='running'){
+      audioMuted=true;showAudioStatus();
+    }else{
+      audioMuted=false;activateSound();
+    }
   });
+  // Try audio on first load, but the browser may require a genuine user gesture.
+  // Never claim audio is on unless its AudioContext is actually running.
+  activateSound();
+  document.addEventListener('visibilitychange',showAudioStatus);
+  setInterval(showAudioStatus,10000);
   // No alarm on startup: only a subsequent known-green-to-red transition.
   const previousLights=new Map();
-  // Remember alert identities across the dashboard's scheduled reload.
-  const ALERT_STORAGE='kalispell-seen-nws-alert-ids-v1';
-  let seenAlertIds=null;
-  try{const saved=sessionStorage.getItem(ALERT_STORAGE);if(saved!==null)seenAlertIds=new Set(JSON.parse(saved))}catch(e){}
-  function reportAlertIds(ids){
-    if(seenAlertIds!==null && ids.some(id=>!seenAlertIds.has(id)))playSound('alert');
-    seenAlertIds=new Set(ids);
-    try{sessionStorage.setItem(ALERT_STORAGE,JSON.stringify(ids))}catch(e){}
+  // Persist most recent alert identities/severity so refreshes and page reloads do not re-alarm.
+  const ALERT_STORAGE='kalispell-nws-alert-severity-v2';
+  let previousAlerts=null;
+  try{const stored=sessionStorage.getItem(ALERT_STORAGE);if(stored)previousAlerts=new Map(JSON.parse(stored))}catch(e){}
+  function reportAlertIds(alerts){
+    const current=new Map(alerts.map(f=>{
+      const p=f.properties||{};
+      return [String(p.id||p['@id']||f.id||`${p.event}-${p.onset}`),alertPriority(p)];
+    }));
+    if(previousAlerts!==null){
+      const changes=[...current.entries()].filter(([id,level])=>!previousAlerts.has(id)||level>previousAlerts.get(id));
+      if(changes.length)playSound(changes.some(([,level])=>level>=3)?'warning':'alert');
+    }
+    previousAlerts=current;
+    try{sessionStorage.setItem(ALERT_STORAGE,JSON.stringify([...current.entries()]))}catch(e){}
+  }
+  function alertPriority(p){
+    const name=String(p.event||'').toLowerCase();
+    if(/warning|emergency/.test(name))return 3;
+    if(/watch/.test(name))return 2;
+    if(/advisory|statement/.test(name))return 1;
+    return {Extreme:3,Severe:3,Moderate:2,Minor:1}[p.severity]||1;
   }
   const TZ='America/Denver';
   const $=id=>document.getElementById(id);
@@ -283,7 +358,7 @@
   const clockFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
   function clockTick(){let now=new Date();let parts=clockFmt.formatToParts(now);let val=x=>parts.find(p=>p.type===x)?.value??'00';$('clock').textContent=`${val('hour')}:${val('minute')}`;$('seconds').textContent=val('second');$('date').textContent=dateFmt.format(now)}
   clockTick();setInterval(clockTick,1000);
-  const WEATHER_URL='https://api.open-meteo.com/v1/forecast?latitude=48.1987&longitude=-114.3129&current=temperature_2m,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=precipitation_probability&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FDenver&forecast_days=2';
+  const WEATHER_URL='https://api.open-meteo.com/v1/forecast?latitude=48.1987&longitude=-114.3129&current=temperature_2m,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,apparent_temperature,visibility&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=precipitation_probability&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FDenver&forecast_days=2';
   const compass=d=>['N','NE','E','SE','S','SW','W','NW'][Math.round((d%360)/45)%8];
   const txt=(v,suffix='')=>Number.isFinite(v)?`${Math.round(v)}${suffix}`:'--';
   const weatherLookup=(code,isDay)=>{
@@ -330,6 +405,8 @@
     $('highlow').textContent=`${txt(d.temperature_2m_max?.[0],'°')} / ${txt(d.temperature_2m_min?.[0],'°')}`;
     windInfo(c.wind_speed_10m,c.wind_direction_10m);
     $('humidity').textContent=txt(c.relative_humidity_2m,'%');$('precip').textContent=txt(precipitationProbability(data),'%');
+    $('feels-like').textContent=`Feels like ${txt(c.apparent_temperature,'°')}`;
+    if(Number.isFinite(c.visibility)){renderVisibility(c.visibility/1609.344,'Open-Meteo (fallback)')}
     $('sunrise').textContent=d.sunrise?.[0]?.split('T')[1]?.slice(0,5)??'--:--';
     $('sunset').textContent=d.sunset?.[0]?.split('T')[1]?.slice(0,5)??'--:--';
   }
@@ -353,6 +430,9 @@
     const highs=periods.filter(p=>p.isDaytime),lows=periods.filter(p=>!p.isDaytime);
     $('highlow').textContent=`${txt(highs[0]?.temperature,'°')} / ${txt(lows[0]?.temperature,'°')}`;
     const windMatch=String(h.windSpeed||'').match(/\d+/);
+    const windMph=windMatch?Number(windMatch[0]):NaN;
+    const rhForFeels=h.relativeHumidity?.value;
+    $('feels-like').textContent=`Feels like ${txt(feelsLikeF(tempF,windMph,rhForFeels),'°')}`;
     $('wind').textContent=(windMatch?windMatch[0]:'--')+' mph '+(h.windDirection||'');
     const rh=h.relativeHumidity?.value;
     $('humidity').textContent=txt(rh,'%');
@@ -396,7 +476,7 @@
         await renderNwsPrimary();
         weatherLastSuccessful=Date.now();
         $('updated').textContent=`Updated ${updateFmt.format(new Date())}`;
-        setWeatherStatus('Weather live · NOAA/NWS',true);
+        setWeatherStatus('Weather Source: NOAA/NWS',true);
         // Locally compute solar times using NOAA equations.
         calculateSolarTimes();
         return;
@@ -405,51 +485,104 @@
         renderOpenMeteo(await fetchJson(WEATHER_URL));
         weatherLastSuccessful=Date.now();
         $('updated').textContent=`Updated ${updateFmt.format(new Date())}`;
-        setWeatherStatus('Weather live · Open-Meteo backup',true);
+        setWeatherStatus('Weather Source: Open-Meteo (fallback)',true);
         return;
       }catch(error){
         console.warn('Open-Meteo backup unavailable:',error);
         const reason=`NOAA: ${primaryError?.message||'request failed'}; Open-Meteo: ${error?.message||'request failed'}`;
-        setWeatherStatus('Weather unavailable · '+reason);
+        setWeatherStatus('Weather Source: Unavailable · '+reason);
         if(!weatherLastSuccessful)$('condition').textContent='Weather services unavailable';
       }
     }finally{weatherRefreshing=false}
   }
-  refreshWeather();setInterval(refreshWeather,5*60*1000);
-  // Retry shortly after initial page load in case the network is still connecting.
-  setTimeout(()=>{if(!weatherLastSuccessful)refreshWeather()},25000);
+  let weatherFailures=0;
+  async function weatherCycle(){
+    const before=weatherLastSuccessful;
+    await refreshWeather();
+    weatherFailures=weatherLastSuccessful>before?0:Math.min(weatherFailures+1,6);
+    setTimeout(weatherCycle,weatherFailures?Math.min(300000,15000*2**(weatherFailures-1)):300000);
+  }
+  weatherCycle();
+  // NOAA/NWS observation-station visibility. Run separately so a station failure
+  // never prevents the main NWS forecast from displaying.
+  let visibilityLastSuccessful=0;
+  function renderVisibility(miles,source){
+    if(!Number.isFinite(miles)||miles<0) return;
+    $('visibility').innerHTML=`${miles>=10?Math.round(miles):miles.toFixed(1)} <em>mi</em>`;
+    $('visibility-source').textContent=`Visibility: ${source}`;
+    visibilityLastSuccessful=Date.now();
+  }
+  async function refreshVisibility(){
+    try{
+      const observation=await fetchJson('https://api.weather.gov/stations/KGPI/observations/latest',12000);
+      const meters=observation.properties?.visibility?.value;
+      if(Number.isFinite(meters))renderVisibility(meters/1609.344,'NOAA/NWS (KGPI)');
+      else throw new Error('No station visibility');
+    }catch(err){
+      console.warn('NOAA visibility not available:',err);
+      if(!visibilityLastSuccessful){
+        $('visibility-source').textContent='Visibility: Unavailable';
+      }
+    }
+  }
+  refreshVisibility();
+  setInterval(refreshVisibility,5*60*1000);
+
+  // NOAA wind chill / heat-index formulas; in ordinary conditions use air temp.
+  function feelsLikeF(t,w,rh){
+    if(!Number.isFinite(t))return NaN;
+    if(t<=50&&Number.isFinite(w)&&w>3)
+      return 35.74+0.6215*t-35.75*Math.pow(w,0.16)+0.4275*t*Math.pow(w,0.16);
+    if(t>=80&&Number.isFinite(rh)){
+      const hi=-42.379+2.04901523*t+10.14333127*rh-.22475541*t*rh-.00683783*t*t-.05481717*rh*rh+.00122874*t*t*rh+.00085282*t*rh*rh-.00000199*t*t*rh*rh;
+      return hi>t?hi:t;
+    }
+    return t;
+  }
+
   // NWS active alerts for Flathead County (MTC029).
   // An unsuccessful response never silently clears an alert previously displayed.
   const ALERTS_URL='https://api.weather.gov/alerts/active?zone=MTC029';
+  let activeAlerts=[],alertTickerIndex=0,alertFailures=0;
+  function showAlert(index){
+    const banner=$('alert-banner');
+    banner.classList.remove('severe','critical','watch','advisory');
+    if(!activeAlerts.length){
+      $('alert-symbol').textContent='✓';$('alert-heading').textContent='NO ACTIVE WEATHER ALERTS';
+      $('alert-details').textContent='';
+      $('alert-link').hidden=true;return;
+    }
+    const f=activeAlerts[index%activeAlerts.length],p=f.properties||{},priority=alertPriority(p);
+    const warning=priority===3;
+    banner.classList.add(warning?'severe':priority===2?'watch':'advisory');
+    if(warning && String(p.severity).toLowerCase()==='extreme')banner.classList.add('critical');
+    $('alert-symbol').textContent='⚠';
+    $('alert-heading').textContent=(activeAlerts.length>1?`${index%activeAlerts.length+1}/${activeAlerts.length} · `:'')+(p.event||'WEATHER ALERT').toUpperCase();
+    $('alert-details').textContent=p.headline||p.areaDesc||'NWS alert for Flathead County';
+    $('alert-link').href=p['@id']||p.id||f.id||'https://www.weather.gov/mso/';$('alert-link').hidden=false;
+  }
   async function refreshAlerts(){
     try{
-      const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),12000);
-      let response;
-      try{response=await fetch(ALERTS_URL,{headers:{Accept:'application/geo+json'},cache:'no-store',signal:controller.signal})}finally{clearTimeout(timer)}
-      if(!response.ok)throw new Error('NWS '+response.status);
-      const data=await response.json();
-      const now=Date.now();
-      const alerts=(data.features??[]).filter(f=>{
-        const a=f.properties??{};
-        return a.status==='Actual' && (!a.effective||Date.parse(a.effective)<=now) && (!a.expires||Date.parse(a.expires)>now) && (!a.ends||Date.parse(a.ends)>now);
-      }).sort((a,b)=>{
-        const rank={Extreme:4,Severe:3,Moderate:2,Minor:1,Unknown:0};
-        return (rank[b.properties.severity]??0)-(rank[a.properties.severity]??0);
-      });
-      const banner=$('alert-banner');
-      reportAlertIds(alerts.map(f=>String(f.properties?.id||f.properties?.['@id']||f.id||`${f.properties?.event}-${f.properties?.onset}`)));
+      const data=await fetchJson(ALERTS_URL,12000),now=Date.now();
+      if(!Array.isArray(data.features))throw new Error('Malformed NWS alert data');
+      activeAlerts=data.features.filter(f=>{
+        const p=f.properties||{};
+        return p.status==='Actual'&&(!p.effective||Date.parse(p.effective)<=now)&&(!p.expires||Date.parse(p.expires)>now)&&(!p.ends||Date.parse(p.ends)>now);
+      }).sort((a,b)=>alertPriority(b.properties)-alertPriority(a.properties));
+      reportAlertIds(activeAlerts);
+      alertTickerIndex=0;showAlert(alertTickerIndex);
       $('alert-status').textContent='Alerts current';
-      if(!alerts.length){banner.classList.remove('severe');$('alert-symbol').textContent='✓';$('alert-heading').textContent='NO ACTIVE ALERTS';$('alert-details').textContent='No watches, warnings, or advisories.';$('alert-link').hidden=true;return}
-      const a=alerts[0].properties;
-      $('alert-heading').textContent=(alerts.length>1?`${alerts.length} ACTIVE ALERTS · `:'')+(a.event??'WEATHER ALERT').toUpperCase();
-      $('alert-details').textContent=a.headline||a.areaDesc||'Active National Weather Service advisory for Flathead County';
-      $('alert-link').href=(a['@id']||a.id||alerts[0].id||'https://www.weather.gov/mso/');
-      $('alert-symbol').textContent='⚠';$('alert-link').hidden=false;
-      banner.classList.toggle('severe',['Severe','Extreme'].includes(a.severity));
-    }catch(error){$('alert-status').textContent='Alerts unavailable';if($('alert-heading').textContent==='CHECKING WEATHER ALERTS'){$('alert-heading').textContent='ALERT STATUS UNAVAILABLE';$('alert-details').textContent='Unable to verify current NWS alerts';$('alert-symbol').textContent='?'}console.warn('Weather alerts update unsuccessful:',error)}
+      alertFailures=0;
+    }catch(e){
+      $('alert-status').textContent='Alerts unavailable';
+      if(!alertSuccessfulAt){$('alert-heading').textContent='ALERT STATUS UNAVAILABLE';$('alert-details').textContent='Unable to verify current NWS alerts';$('alert-symbol').textContent='?'}
+      console.warn('Weather alert update:',e);
+      alertFailures=Math.min(alertFailures+1,6);
+    }
+    setTimeout(refreshAlerts,alertFailures?Math.min(120000,15000*2**(alertFailures-1)):120000);
   }
-  refreshAlerts();setInterval(refreshAlerts,2*60*1000);
-
+  refreshAlerts();
+  setInterval(()=>{if(activeAlerts.length>1){alertTickerIndex++;showAlert(alertTickerIndex)}},8500);
 
   // Health signals: API data freshness and alert API health are checked directly.
   // Cross-origin iframe 'load' means its frame loaded, not that its contents are healthy.
@@ -475,10 +608,24 @@
     setTimeout(()=>{if(!$(lightId).classList.contains('good'))light(lightId,false)},30000);
   }
   function refreshHealth(){
-    light('weather-light',!!weatherLastSuccessful && Date.now()-weatherLastSuccessful<15*60*1000);
+    const weatherFresh=!!weatherLastSuccessful && Date.now()-weatherLastSuccessful<15*60*1000;
+    light('weather-light',weatherFresh);
+    $('updated').classList.toggle('stale-indicator',!!weatherLastSuccessful&&!weatherFresh);
+    if(weatherLastSuccessful&&!weatherFresh && !$('weather-status').textContent.includes('stale')){
+      $('weather-status').textContent+=' · stale';
+    }
+
     if(alertSuccessfulAt && Date.now()-alertSuccessfulAt>10*60*1000)light('alert-light',false);
   }
   setInterval(refreshHealth,10000);
+  // Watchdog rechecks services after unusual browser suspension or overdue data.
+  let watchdogWeatherAttempt=0;
+  setInterval(()=>{
+    const now=Date.now();
+    if(weatherLastSuccessful && now-weatherLastSuccessful>18*60000 && now-watchdogWeatherAttempt>120000){watchdogWeatherAttempt=now;refreshWeather()}
+
+    if(alertSuccessfulAt && now-alertSuccessfulAt>11*60000 && !alertFailures)refreshAlerts();
+  },60000);
   refreshHealth();
   // Always-on subtle pixel shifting: reduces static exposure, but cannot prevent burn-in.
   let shiftStep=0;
@@ -489,6 +636,9 @@
   }
   setInterval(()=>{shiftStep++;applyShift()},120000);
   applyShift();
+  // Very small overall brightness variation; use TV manufacturer's protections as well.
+  let dimStep=0;
+  setInterval(()=>{dimStep=(dimStep+1)%4;document.documentElement.style.setProperty('--screen-brightness',[1,.985,.97,.985][dimStep])},20*60*1000);
 
   // Reload the static dashboard every six hours to keep embedded maps and a long-running TV browser fresh.
   setTimeout(()=>location.reload(),6*60*60*1000);
