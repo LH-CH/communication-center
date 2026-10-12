@@ -1,6 +1,6 @@
 # Kalispell TV Dashboard
 
-**Version 1.1** · Static, fullscreen TV dashboard for Kalispell, Montana.
+**Version 1.2** · Static, fullscreen TV dashboard for Kalispell, Montana.
 
 A dark, four-quadrant dashboard optimized for a 16:9 TV display. It shows a local 24-hour clock, current weather, Flathead Electric outages, regional radar, and a persistent Flathead County weather-alert strip.
 
@@ -76,3 +76,18 @@ No build tools, backend, or user-supplied API key are required.
 - Reduced header height and spacing to give more room to the four content panels.
 - Removed the pixel-shift toggle. Subtle panel shifting runs automatically every two minutes. There is no setting or stored browser preference.
 - Pixel shifting does not guarantee protection against burn-in; use TV hardware protections too.
+
+
+## Version 1.2: Audio notifications
+
+- Click **Enable sound** once after opening the dashboard. Browsers generally block automatic audio until a user gesture, and audio may need enabling again after a page reload, browser restart or TV power cycle. The button changes to **Sound on** after successful activation.
+- **Component failure:** Two descending tones play only when an indicator previously known green transitions to red. Initial startup/loading errors do not trigger a sound.
+- **New Flathead County NOAA weather alert:** A distinctive three-tone chime plays when a newly encountered alert ID appears after a successful prior alert check. Current alerts at first load establish the baseline without sound; previously known IDs are preserved in session storage across scheduled reloads where available.
+- Repeated polling of an unchanged failed status or the same alert does not repeat a tone. Audio is informational only and should not be relied upon as the sole emergency-warning method.
+- Due to cross-origin iframe restrictions, Outages/Radar health lights reflect iframe loading events, **not** actual outage/radar freshness.
+
+## Version 1.2 display refinements
+
+- Increased weather tile labels and current condition text for TV readability.
+- Weather last-updated timestamp includes Kalispell-local date and 24-hour time.
+- Removed the redundant weather status-dot element near the updated timestamp; the compact header still shows its main Weather health indicator.

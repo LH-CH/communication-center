@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a111b">
   <meta name="description" content="Kalispell, Montana live weather, power outage map and radar TV dashboard">
   <title>Kalispell | Live Information Dashboard</title>
-  <!-- Kalispell TV Dashboard v1.1 -->
+  <!-- Kalispell TV Dashboard v1.2 -->
   <style>
     :root{color-scheme:dark;--bg:#09111b;--panel:#111e2d;--border:#243548;--soft:#9fb1c3;--white:#f3f7fc;--accent:#73c4eb;--ok:#8bd5b1;--warn:#f8c681}
     *{box-sizing:border-box}
@@ -132,7 +132,7 @@
     @media (max-width:850px){.clock-panel .clock{font-size:clamp(50px,9vw,95px);gap:8px}}
 
 
-    /* v1.1: compact health header and larger TV typography */
+    /* v1.2: compact health header and larger TV typography */
     .screen{grid-template-rows:auto minmax(0,1fr);gap:clamp(4px,.35vw,7px)}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:9px;min-height:22px;color:#c6d7e6;font-size:clamp(11px,.72vw,14px);white-space:nowrap}
     .topbar-status,.topbar-controls{display:flex;align-items:center;gap:clamp(7px,.7vw,13px);min-width:0}
@@ -161,6 +161,14 @@
     /* Pixel shifting is always active on the content panels; the header stays fixed. */
     .bodygrid{transition:transform 1.5s ease-in-out;will-change:transform}
 
+
+    /* v1.2 TV readability refinements. Keep short-height rules readable too. */
+    .metric-name{font-size:clamp(15px,1.12vw,22px);font-weight:650;line-height:1.24}
+    .condition{font-size:clamp(19px,1.48vw,29px);font-weight:600;line-height:1.2}
+    @media(min-width:851px) and (max-height:820px){
+      .metric-name{font-size:clamp(14px,1.04vw,19px)}
+      .condition{font-size:clamp(17px,1.3vw,24px)}
+    }
   </style>
 </head>
 <body>
@@ -175,9 +183,9 @@
     </div>
     <div class="topbar-controls">
       <span id="weather-status" class="topbar-source">Weather connecting</span>
-      <span id="updated" class="topbar-updated">Last update --:--</span>
+      <span id="updated" class="topbar-updated">Updated --</span>
       <span id="alert-status" class="offscreen">Alerts checking</span>
-      <span id="weather-status-dot" class="offscreen"></span>
+      <button id="audio-enable" class="audio-enable" type="button" aria-label="Enable dashboard alarm sounds">Enable sound</button>
     </div>
   </header>
 
@@ -226,9 +234,51 @@
 </main>
 <script>
   'use strict';
+  // Most browsers block audible playback until a user interacts with the page.
+  // Press Enable sound once on the TV browser to unlock synthesized alarms.
+  let audioContext=null, audioReady=false;
+  const soundButton=document.getElementById('audio-enable');
+  function tone(freq,start,duration,volume=0.12){
+    if(!audioReady||!audioContext)return;
+    const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+    osc.type='sine';osc.frequency.setValueAtTime(freq,start);
+    gain.gain.setValueAtTime(0,start);
+    gain.gain.linearRampToValueAtTime(volume,start+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001,start+duration);
+    osc.connect(gain).connect(audioContext.destination);osc.start(start);osc.stop(start+duration+0.01);
+  }
+  function playSound(kind){
+    if(!audioReady||!audioContext||audioContext.state!=='running')return;
+    const at=audioContext.currentTime+0.035;
+    if(kind==='fault'){
+      tone(440,at,0.19);tone(330,at+0.24,0.28);
+    }else if(kind==='alert'){
+      tone(660,at,0.19,0.16);tone(880,at+0.25,0.22,0.16);tone(1046,at+0.55,0.4,0.18);
+    }
+  }
+  soundButton.addEventListener('click',async()=>{
+    try{
+      audioContext??=new (window.AudioContext||window.webkitAudioContext)();
+      await audioContext.resume();
+      audioReady=audioContext.state==='running';
+      if(audioReady){soundButton.textContent='Sound on';soundButton.classList.add('ready');soundButton.title='Sound is enabled for this page session';}
+    }catch(e){soundButton.textContent='Sound blocked';console.warn('Audio activation failed',e)}
+  });
+  // No alarm on startup: only a subsequent known-green-to-red transition.
+  const previousLights=new Map();
+  // Remember alert identities across the dashboard's scheduled reload.
+  const ALERT_STORAGE='kalispell-seen-nws-alert-ids-v1';
+  let seenAlertIds=null;
+  try{const saved=sessionStorage.getItem(ALERT_STORAGE);if(saved!==null)seenAlertIds=new Set(JSON.parse(saved))}catch(e){}
+  function reportAlertIds(ids){
+    if(seenAlertIds!==null && ids.some(id=>!seenAlertIds.has(id)))playSound('alert');
+    seenAlertIds=new Set(ids);
+    try{sessionStorage.setItem(ALERT_STORAGE,JSON.stringify(ids))}catch(e){}
+  }
   const TZ='America/Denver';
   const $=id=>document.getElementById(id);
   const timeFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  const updateFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
   const dateFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const clockFmt=new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
   function clockTick(){let now=new Date();let parts=clockFmt.formatToParts(now);let val=x=>parts.find(p=>p.type===x)?.value??'00';$('clock').textContent=`${val('hour')}:${val('minute')}`;$('seconds').textContent=val('second');$('date').textContent=dateFmt.format(now)}
@@ -267,7 +317,6 @@
   }
   function setWeatherStatus(message,ok=false){
     $('weather-status').textContent=message;
-    $('weather-status-dot').className='status-dot '+(ok?'live':'error');
   }
   function windInfo(speed,direction){
     const bearing=Number.isFinite(direction)?compass(direction):'';
@@ -346,7 +395,7 @@
       try{
         await renderNwsPrimary();
         weatherLastSuccessful=Date.now();
-        $('updated').textContent=`Updated ${timeFmt.format(new Date())}`;
+        $('updated').textContent=`Updated ${updateFmt.format(new Date())}`;
         setWeatherStatus('Weather live · NOAA/NWS',true);
         // Locally compute solar times using NOAA equations.
         calculateSolarTimes();
@@ -355,7 +404,7 @@
       try{
         renderOpenMeteo(await fetchJson(WEATHER_URL));
         weatherLastSuccessful=Date.now();
-        $('updated').textContent=`Updated ${timeFmt.format(new Date())}`;
+        $('updated').textContent=`Updated ${updateFmt.format(new Date())}`;
         setWeatherStatus('Weather live · Open-Meteo backup',true);
         return;
       }catch(error){
@@ -388,6 +437,7 @@
         return (rank[b.properties.severity]??0)-(rank[a.properties.severity]??0);
       });
       const banner=$('alert-banner');
+      reportAlertIds(alerts.map(f=>String(f.properties?.id||f.properties?.['@id']||f.id||`${f.properties?.event}-${f.properties?.onset}`)));
       $('alert-status').textContent='Alerts current';
       if(!alerts.length){banner.classList.remove('severe');$('alert-symbol').textContent='✓';$('alert-heading').textContent='NO ACTIVE ALERTS';$('alert-details').textContent='No watches, warnings, or advisories.';$('alert-link').hidden=true;return}
       const a=alerts[0].properties;
@@ -403,7 +453,13 @@
 
   // Health signals: API data freshness and alert API health are checked directly.
   // Cross-origin iframe 'load' means its frame loaded, not that its contents are healthy.
-  function light(id,state){const el=$(id);if(el)el.className='health-light '+(state===true?'good':state===false?'bad':'')}
+  function light(id,state){
+    const el=$(id);if(!el)return;
+    const prev=previousLights.get(id);
+    el.className='health-light '+(state===true?'good':state===false?'bad':'');
+    previousLights.set(id,state);
+    if(prev===true && state===false)playSound('fault');
+  }
   light('clock-light',true);
   let alertSuccessfulAt=0;
   const oldAlertStatus=$('alert-status');
